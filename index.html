@@ -1,0 +1,869 @@
+
+<!--
+	========================================
+	SuiYuan Search - 新标签页搜索扩展
+	========================================
+	
+	文件说明：
+	- 这是扩展的主页面，作为Chrome的新标签页显示
+	- 包含搜索功能、时钟显示、背景切换等核心功能
+	- 使用纯HTML/CSS/JavaScript实现，无需外部依赖
+	
+	功能特性：
+	1. 多搜索引擎支持（必应、谷歌、百度、自定义）
+	2. 主题切换（亮色/暗色/跟随系统）
+	3. 背景定制（默认/纯色/渐变/图片/视频）
+	4. 动画效果
+	5. 时钟显示
+	6. 响应式设计
+	
+	技术特点：
+	- 使用CSS变量实现主题切换
+	- 使用CSS Grid和Flexbox实现响应式布局
+	- 使用CSS动画和过渡效果
+	- 使用Chrome Storage API保存设置
+	- 使用contenteditable实现可编辑标题
+-->
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- 基础元信息 -->
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="icon" href="img/ico.ico" type="image/x-icon">
+		<title>随缘起始页</title>
+		<style>
+			body {
+				margin: 0;
+				overflow: hidden;
+				height: 100vh;
+				display: flex;
+				justify-content: center;
+				align-items: flex-start;
+				padding-top: 20vh;
+				transition: background 0.5s ease-in-out;
+			}
+			
+			/* 默认背景样式 */
+			body:not(.solid-background):not(.gradient-background):not(.image-background):not(.video-background) {
+				background: url("img/亮色.jpg") no-repeat;
+				background-size: cover;
+				background-position: center;
+			}
+			
+			/* 动态背景样式 */
+			body.solid-background {
+				background-image: none !important;
+				background-repeat: repeat !important;
+				background-position: initial !important;
+				background-size: auto !important;
+			}
+			
+			body.gradient-background {
+				/* 渐变背景样式 - 不设置background-image，让JavaScript通过background属性设置渐变 */
+				background-repeat: no-repeat !important;
+				background-position: center !important;
+				background-size: cover !important;
+			}
+			
+			body.image-background {
+				background: none !important;
+				position: relative;
+			}
+			
+			body.image-background::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background-size: cover;
+				background-position: center;
+				background-repeat: no-repeat;
+				z-index: -1;
+			}
+			
+			body.video-background {
+				background: none !important;
+			}
+			
+			.rounded-rectangle {
+				flex-grow: 1;
+				height: 40px;
+				background-color: rgba(255, 255, 255, 0.8);
+				border-radius: 20px;
+				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+				padding: 0 20px;
+				box-sizing: border-box;
+				font-size: 16px;
+				color: #333;
+				outline: none;
+				position: relative;
+				text-align: center;
+				line-height: 40px;
+				min-width: 200px;
+			}
+			
+			.text-content {
+				outline: none;
+			}
+			
+			.text-content:empty:before {
+				content: attr(data-placeholder);
+				color: #999;
+				pointer-events: none;
+			}
+			
+			.search-container {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 20px;
+				width: 60%;
+				max-width: 800px;
+				margin: 0 auto;
+				padding-top: 10vh;
+			}
+			
+			.search-title {
+			font-size: 32px;
+			font-weight: bold;
+			color: #000000;
+			text-align: center;
+			margin-bottom: 20px;
+			font-family: 'Arial', sans-serif;
+			letter-spacing: 2px;
+			/* 亮色主题下的文本边框效果 */
+			text-shadow: 
+				-1px -1px 0 rgba(255, 255, 255, 0.8),
+				1px -1px 0 rgba(255, 255, 255, 0.8),
+				-1px 1px 0 rgba(255, 255, 255, 0.8),
+				1px 1px 0 rgba(255, 255, 255, 0.8),
+				0 -1px 0 rgba(255, 255, 255, 0.8),
+				0 1px 0 rgba(255, 255, 255, 0.8),
+				-1px 0 0 rgba(255, 255, 255, 0.8),
+				1px 0 0 rgba(255, 255, 255, 0.8);
+			cursor: pointer;
+			transition: color 0.3s ease, text-shadow 0.3s ease, font-size 0.3s ease;
+		}
+		
+		/* 响应式设计：时间显示的字体大小调整 */
+		@media (max-width: 768px) {
+			.search-title {
+				font-size: 28px !important;
+			}
+		}
+		
+		@media (max-width: 480px) {
+			.search-title {
+				font-size: 24px !important;
+				letter-spacing: 1px;
+			}
+		}
+		
+		@media (min-width: 1200px) {
+			.search-title {
+				font-size: 48px !important;
+			}
+		}
+		
+		@media (min-width: 1600px) {
+			.search-title {
+				font-size: 64px !important;
+			}
+		}
+			
+			.search-input-container {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 8px;
+				width: 100%;
+			}
+			
+			.circle-dropdown {
+				position: relative;
+				flex-shrink: 0;
+			}
+			
+			.solid-circle {
+				width: 40px;
+				height: 40px;
+				background-color: white;
+				border-radius: 50%;
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+				cursor: pointer;
+				transition: all 0.3s ease;
+			}
+			
+			.solid-circle:hover {
+				background-color: #39c5bb;
+				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+				transform: scale(1.05);
+			}
+			
+			.dropdown-menu {
+				position: absolute;
+				top: 50px;
+				left: 50%;
+				transform: translateX(-50%);
+				background-color: rgba(255, 255, 255, 0.95);
+				border-radius: 12px;
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+				opacity: 0;
+				visibility: hidden;
+				transform: translateX(-50%) translateY(-10px);
+				transition: all 0.3s ease;
+				z-index: 1000;
+				min-width: 80px;
+			}
+			
+			.circle-dropdown:hover .dropdown-menu,
+			.circle-dropdown.active .dropdown-menu {
+				opacity: 1;
+				visibility: visible;
+				transform: translateX(-50%) translateY(0);
+			}
+			
+			/* 左侧圆形始终显示搜索引擎图标 */
+			.circle-dropdown .solid-circle::after {
+				content: '';
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				width: 24px;
+				height: 24px;
+				background-size: contain;
+				background-repeat: no-repeat;
+				background-position: center;
+				opacity: 1;
+			}
+			
+			/* 根据当前选中的搜索引擎显示对应图标 */
+			.circle-dropdown[data-engine="bing"] .solid-circle::after {
+				background-image: url('img/bing.png');
+			}
+			
+			.circle-dropdown[data-engine="google"] .solid-circle::after {
+				background-image: url('img/Google.png');
+			}
+			
+			.circle-dropdown[data-engine="baidu"] .solid-circle::after {
+				background-image: url('img/baidu.png');
+			}
+			
+			.dropdown-item {
+				padding: 10px 16px;
+				text-align: center;
+				cursor: pointer;
+				transition: all 0.2s ease;
+				font-size: 14px;
+				color: #333;
+				border-radius: 8px;
+				margin: 4px;
+			}
+			
+			.dropdown-item:hover {
+				background-color: #f0f0f0;
+				color: #39c5bb;
+			}
+			
+			.dropdown-item.active {
+				background-color: #39c5bb;
+				color: white;
+			}
+			
+			.dropdown-item:first-child {
+				margin-top: 8px;
+			}
+			
+			.dropdown-item:last-child {
+				margin-bottom: 8px;
+			}
+			
+			.search-button {
+				position: relative;
+			}
+			
+			.search-button::after {
+				content: '🔍';
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				font-size: 18px;
+				color: white;
+			}
+			
+			.search-button:hover {
+				background-color: #39c5bb;
+			}
+			
+			/* 暗色模式样式（视频背景模式除外） */
+			body.dark-mode:not(.solid-background):not(.gradient-background):not(.image-background):not(.video-background) {
+				background: url("img/暗色.jpg") no-repeat;
+				background-size: cover;
+				background-position: center;
+			}
+			
+			body.dark-mode .rounded-rectangle {
+				background-color: rgba(0, 0, 0, 0.8);
+				color: white;
+			}
+			
+			body.dark-mode .text-content:empty:before {
+				color: #ccc;
+			}
+			
+			body.dark-mode .solid-circle {
+				background-color: #333;
+			}
+			
+			body.dark-mode .solid-circle:hover {
+				background-color: #5d595c;
+			}
+			
+			body.dark-mode .search-button::after {
+				color: white;
+			}
+			
+			body.dark-mode .dropdown-menu {
+				background-color: rgba(0, 0, 0, 0.9);
+			}
+			
+			body.dark-mode .dropdown-item {
+				color: white;
+			}
+			
+			body.dark-mode .dropdown-item:hover {
+				background-color: #444;
+				color: #5d595c;
+			}
+			
+			body.dark-mode .dropdown-item.active {
+				background-color: #5d595c;
+				color: white;
+			}
+			
+			body.dark-mode .search-title {
+				color: #ffffff;
+				/* 暗色主题下的文本边框效果 */
+				text-shadow: 
+					-1px -1px 0 rgba(0, 0, 0, 0.8),
+					1px -1px 0 rgba(0, 0, 0, 0.8),
+					-1px 1px 0 rgba(0, 0, 0, 0.8),
+					1px 1px 0 rgba(0, 0, 0, 0.8),
+					0 -1px 0 rgba(0, 0, 0, 0.8),
+					0 1px 0 rgba(0, 0, 0, 0.8),
+					-1px 0 0 rgba(0, 0, 0, 0.8),
+					1px 0 0 rgba(0, 0, 0, 0.8);
+			}
+
+			/* 收藏夹栏样式 */
+			.bookmarks-bar {
+				position: fixed;
+				bottom: 20px;
+				left: 50%;
+				transform: translateX(-50%);
+				background: rgba(255, 255, 255, 0.1);
+				backdrop-filter: blur(20px);
+				-webkit-backdrop-filter: blur(20px);
+				border: 1px solid rgba(255, 255, 255, 0.2);
+				border-radius: 25px;
+				padding: 8px 20px;
+				z-index: 1000;
+				transition: all 0.3s ease;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				width: auto;
+				min-width: 200px;
+				max-width: 90%;
+			}
+
+			.bookmarks-content {
+				display: flex;
+				flex-wrap: nowrap;
+				gap: 10px;
+				align-items: center;
+				justify-content: center;
+				height: 44px;
+				overflow-x: auto;
+				overflow-y: hidden;
+				width: auto;
+				padding: 0 5px;
+			}
+
+			/* 隐藏滚动条但保持滚动功能 */
+			.bookmarks-content::-webkit-scrollbar {
+				display: none;
+			}
+
+			.bookmarks-content {
+				-ms-overflow-style: none;
+				scrollbar-width: none;
+			}
+
+			.bookmark-item {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 6px;
+				padding: 4px 8px;
+				background: rgba(255, 255, 255, 0.2);
+				border-radius: 18px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				text-decoration: none;
+				color: #333;
+				font-size: 13px;
+				white-space: nowrap;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+				border: 1px solid rgba(255, 255, 255, 0.3);
+				flex-shrink: 0;
+				height: 28px;
+				min-width: 60px;
+				max-width: 100px;
+			}
+
+			.bookmark-item:hover {
+				background: rgba(255, 255, 255, 0.3);
+				transform: translateY(-1px);
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+				border-color: rgba(255, 255, 255, 0.5);
+			}
+
+			.bookmark-icon {
+				width: 12px;
+				height: 12px;
+				border-radius: 2px;
+				flex-shrink: 0;
+			}
+
+			.bookmark-title {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				font-weight: 500;
+				white-space: nowrap;
+				flex: 0 1 auto;
+				min-width: 0;
+				text-align: center;
+			}
+
+			/* 更多按钮样式 */
+		.bookmark-collapse {
+			background: rgba(57, 197, 187, 0.2) !important;
+			border: 1px solid rgba(57, 197, 187, 0.4) !important;
+			color: #39c5bb !important;
+			font-weight: bold !important;
+			transition: all 0.3s ease !important;
+			display: flex !important;
+			align-items: center !important;
+			justify-content: center !important;
+			gap: 6px !important;
+			padding: 4px 8px !important;
+			border-radius: 18px !important;
+			cursor: pointer !important;
+			text-decoration: none !important;
+			font-size: 13px !important;
+			white-space: nowrap !important;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+			flex-shrink: 0 !important;
+			height: 28px !important;
+		}
+
+		.bookmark-collapse .collapse-text {
+			overflow: visible !important;
+			text-overflow: unset !important;
+			white-space: nowrap !important;
+		}
+
+		.bookmark-collapse:hover {
+			background: rgba(57, 197, 187, 0.4) !important;
+			border: 1px solid rgba(57, 197, 187, 0.6) !important;
+			transform: translateY(-1px) scale(1.05) !important;
+		}
+		
+		.collapse-icon {
+			transition: transform 0.3s ease;
+		}
+
+			/* 下拉菜单样式 */
+			.bookmark-dropdown {
+				position: fixed !important;
+				background: rgba(255, 255, 255, 0.95) !important;
+				backdrop-filter: blur(20px) !important;
+				-webkit-backdrop-filter: blur(20px) !important;
+				border: 1px solid rgba(255, 255, 255, 0.3) !important;
+				border-radius: 12px !important;
+				box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+				padding: 8px !important;
+				min-width: 200px !important;
+				max-height: 300px !important;
+				overflow-y: auto !important;
+				z-index: 1001 !important;
+				opacity: 0 !important;
+				transition: all 0.3s ease !important;
+				transform: translateX(-50%) !important;
+			}
+
+			.bookmark-dropdown::-webkit-scrollbar {
+				width: 6px;
+			}
+
+			.bookmark-dropdown::-webkit-scrollbar-track {
+				background: rgba(0, 0, 0, 0.1);
+				border-radius: 3px;
+			}
+
+			.bookmark-dropdown::-webkit-scrollbar-thumb {
+				background: rgba(57, 197, 187, 0.5);
+				border-radius: 3px;
+			}
+
+			.bookmark-dropdown::-webkit-scrollbar-thumb:hover {
+				background: rgba(57, 197, 187, 0.7);
+			}
+
+			.bookmark-dropdown .bookmark-item {
+				display: block !important;
+				width: 100% !important;
+				margin: 2px 0 !important;
+				padding: 8px 12px !important;
+				border-radius: 8px !important;
+				white-space: nowrap !important;
+				overflow: hidden !important;
+				text-overflow: ellipsis !important;
+			}
+
+			/* 暗色模式下的更多按钮和下拉菜单 */
+			body.dark-mode .bookmark-collapse {
+				background: rgba(57, 197, 187, 0.3) !important;
+				border: 1px solid rgba(57, 197, 187, 0.5) !important;
+				color: #39c5bb !important;
+			}
+
+			body.dark-mode .bookmark-collapse:hover {
+				background: rgba(57, 197, 187, 0.5) !important;
+				border: 1px solid rgba(57, 197, 187, 0.7) !important;
+			}
+
+			body.dark-mode .bookmark-dropdown {
+				background: rgba(0, 0, 0, 0.9) !important;
+				border: 1px solid rgba(255, 255, 255, 0.1) !important;
+			}
+
+			body.dark-mode .bookmark-dropdown::-webkit-scrollbar-track {
+				background: rgba(255, 255, 255, 0.1);
+			}
+
+			body.dark-mode .bookmark-dropdown::-webkit-scrollbar-thumb {
+				background: rgba(93, 89, 92, 0.5);
+			}
+
+			body.dark-mode .bookmark-dropdown::-webkit-scrollbar-thumb:hover {
+				background: rgba(93, 89, 92, 0.7);
+			}
+
+			.bookmarks-toggle {
+				display: none;
+				padding: 8px 16px;
+				background: rgba(57, 197, 187, 0.8);
+				color: white;
+				border: none;
+				border-radius: 20px;
+				cursor: pointer;
+				font-size: 14px;
+				transition: all 0.3s ease;
+				margin: 0 auto;
+			}
+
+			.bookmarks-expanded {
+				max-height: 300px;
+				overflow-y: auto;
+			}
+
+			/* 暗色模式下的收藏夹栏 */
+			body.dark-mode .bookmarks-bar {
+				background: rgba(0, 0, 0, 0.1);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+			}
+
+			body.dark-mode .bookmark-item {
+				background: rgba(255, 255, 255, 0.1);
+				color: white;
+				border: 1px solid rgba(255, 255, 255, 0.2);
+			}
+
+			body.dark-mode .bookmark-item:hover {
+				background: rgba(255, 255, 255, 0.2);
+				border-color: rgba(255, 255, 255, 0.3);
+			}
+
+			body.dark-mode .bookmarks-toggle {
+				background: rgba(93, 89, 92, 0.8);
+			}
+
+			body.dark-mode .bookmarks-toggle:hover {
+				background: rgba(93, 89, 92, 1);
+			}
+
+			/* 移动端收藏夹栏样式 */
+			@media (max-width: 768px) {
+				.bookmarks-bar {
+					bottom: 10px;
+					left: 50%;
+					transform: translateX(-50%);
+					right: auto;
+					width: auto;
+					min-width: 150px;
+					max-width: 95%;
+				}
+
+				.bookmarks-content {
+					gap: 8px;
+					height: 40px;
+				}
+
+				.bookmark-item {
+					height: 28px;
+					min-width: 60px;
+					max-width: 100px;
+					padding: 4px 8px;
+					font-size: 12px;
+					justify-content: center;
+				}
+
+				.bookmark-collapse {
+					height: 28px !important;
+					min-width: auto !important;
+					max-width: none !important;
+					padding: 4px 8px !important;
+					font-size: 12px !important;
+					justify-content: center !important;
+				}
+
+				.bookmark-icon {
+					width: 10px;
+					height: 10px;
+				}
+
+				.bookmark-title {
+					max-width: 50px;
+				}
+
+				.bookmark-collapse .collapse-text {
+					max-width: none !important;
+				}
+			}
+
+			/* 二级菜单样式 */
+			.bookmark-expand-menu {
+				position: fixed;
+				background: rgba(255, 255, 255, 0.1);
+				backdrop-filter: blur(20px);
+				-webkit-backdrop-filter: blur(20px);
+				border: 1px solid rgba(255, 255, 255, 0.2);
+				border-radius: 25px;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+				padding: 8px 20px;
+				z-index: 1001;
+				display: none;
+				opacity: 0;
+				transition: all 0.3s ease;
+				transform: translateY(-10px);
+				max-height: 50vh;
+				overflow-y: auto;
+				pointer-events: none;
+			}
+			
+			.bookmark-expand-menu[style*="display: flex"] {
+				display: flex !important;
+				flex-direction: row;
+				flex-wrap: wrap;
+				gap: 8px;
+				align-items: flex-start;
+				justify-content: flex-start;
+				pointer-events: auto;
+				max-height: 50vh;
+				overflow-y: auto;
+			}
+
+			.bookmark-expand-menu::-webkit-scrollbar {
+				width: 6px;
+			}
+
+			.bookmark-expand-menu::-webkit-scrollbar-track {
+				background: rgba(0, 0, 0, 0.1);
+				border-radius: 3px;
+			}
+
+			.bookmark-expand-menu::-webkit-scrollbar-thumb {
+				background: rgba(57, 197, 187, 0.5);
+				border-radius: 3px;
+			}
+
+			.bookmark-expand-menu::-webkit-scrollbar-thumb:hover {
+				background: rgba(57, 197, 187, 0.7);
+			}
+
+			.bookmark-expand-menu .bookmark-item {
+				display: inline-flex !important;
+				align-items: center !important;
+				justify-content: center !important;
+				gap: 6px !important;
+				height: 28px !important;
+				min-width: 60px !important;
+				max-width: 100px !important;
+				padding: 4px 8px !important;
+				background: rgba(255, 255, 255, 0.2) !important;
+				border-radius: 18px !important;
+				cursor: pointer !important;
+				transition: all 0.3s ease !important;
+				text-decoration: none !important;
+				color: #333 !important;
+				font-size: 13px !important;
+				white-space: nowrap !important;
+				overflow: hidden !important;
+				text-overflow: ellipsis !important;
+			}
+
+			/* 拖拽排序样式 */
+			.bookmark-item.dragging {
+				opacity: 0.5;
+				transform: scale(0.95);
+				transition: all 0.2s ease;
+			}
+
+			.bookmark-placeholder {
+				height: 40px;
+				background: rgba(57, 197, 187, 0.2);
+				border: 2px dashed #39c5bb;
+				border-radius: 6px;
+				margin: 0 4px;
+				flex-shrink: 0;
+				animation: pulse 1.5s infinite;
+			}
+
+			@keyframes pulse {
+				0% { opacity: 0.6; }
+				50% { opacity: 1; }
+				100% { opacity: 0.6; }
+			}
+
+			/* 暗色模式下的拖拽样式 */
+			body.dark-mode .bookmark-placeholder {
+				background: rgba(57, 197, 187, 0.3);
+				border-color: #39c5bb;
+			}
+
+			body.dark-mode .bookmark-item.dragging {
+				opacity: 0.7;
+				background: rgba(255, 255, 255, 0.1);
+			}
+
+			.bookmark-expand-menu .bookmark-item:hover {
+				background: rgba(255, 255, 255, 0.3) !important;
+				transform: translateY(-1px) !important;
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+				border-color: rgba(255, 255, 255, 0.5) !important;
+			}
+
+			.bookmark-expand-menu .bookmark-item:hover {
+				background: rgba(255, 255, 255, 0.3) !important;
+				transform: translateY(-1px) !important;
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+				border-color: rgba(255, 255, 255, 0.5) !important;
+			}
+
+			/* 暗色模式下的二级菜单 */
+			body.dark-mode .bookmark-expand-menu {
+				background: rgba(0, 0, 0, 0.3) !important;
+				border: 1px solid rgba(255, 255, 255, 0.1) !important;
+			}
+
+			body.dark-mode .bookmark-expand-menu .bookmark-item {
+				background: rgba(255, 255, 255, 0.1) !important;
+				border: 1px solid rgba(255, 255, 255, 0.2) !important;
+				color: #fff !important;
+			}
+
+			body.dark-mode .bookmark-expand-menu .bookmark-item:hover {
+				background: rgba(255, 255, 255, 0.2) !important;
+				border-color: rgba(255, 255, 255, 0.4) !important;
+			}
+
+			body.dark-mode .bookmark-expand-menu::-webkit-scrollbar-track {
+				background: rgba(255, 255, 255, 0.1);
+			}
+
+			body.dark-mode .bookmark-expand-menu::-webkit-scrollbar-thumb {
+				background: rgba(93, 89, 92, 0.5);
+			}
+
+			body.dark-mode .bookmark-expand-menu::-webkit-scrollbar-thumb:hover {
+				background: rgba(93, 89, 92, 0.7);
+			}
+
+			/* 动画效果 */
+			@keyframes fadeIn {
+				from {
+					opacity: 0;
+					transform: translateY(10px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			@keyframes fadeOut {
+				from {
+					opacity: 1;
+					transform: translateY(0);
+				}
+				to {
+					opacity: 0;
+					transform: translateY(-10px);
+				}
+			}
+
+		</style>
+	</head>
+ 
+	<body>
+		<div class="search-container">
+			<div class="search-title">SuiYuan-Search</div>
+			<div class="search-input-container">
+				<div class="circle-dropdown">
+					<div class="solid-circle"></div>
+					<div class="dropdown-menu">
+						<div class="dropdown-item active" data-engine="bing">必应</div>
+						<div class="dropdown-item" data-engine="google">谷歌</div>
+						<div class="dropdown-item" data-engine="baidu">百度</div>
+						<div id="custom-engines-container"></div>
+					</div>
+				</div>
+				<div class="rounded-rectangle">
+					<div class="text-content" data-placeholder="搜索"></div>
+				</div>
+				<div class="solid-circle search-button"></div>
+			</div>
+		</div>
+		
+		<!-- 收藏夹栏 -->
+		<div class="bookmarks-bar">
+			<button class="bookmarks-toggle" id="bookmarks-toggle">展开收藏夹</button>
+			<div class="bookmarks-content" id="bookmarks-content">
+				<!-- 收藏夹项目将通过JavaScript动态添加 -->
+			</div>
+		</div>
+	</body>
+	<script src="chrome-api-mock.js"></script>
+	<script src="local-storage.js"></script>
+	<script src="index.js"></script>
+</html>

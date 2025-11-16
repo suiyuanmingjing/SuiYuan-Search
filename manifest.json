@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "SuiYuan Search",
+  "version": "1.0",
+  "description": "随缘起始页 - 一个简洁、开源、可自定义的多搜索引擎起始页扩展",
+  
+  "permissions": [
+    "activeTab",  
+    "storage"     
+  ],
+  
+  "host_permissions": [
+    "file://*/*"  
+  ],
+  
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["img/*"],  
+      "matches": ["<all_urls>"] 
+    }
+  ],
+  
+ 
+  "action": {
+    "default_popup": "popup.html",     
+    "default_title": "SuiYuan Search - 设置"  
+  },
+  
+  "icons": {
+    "16": "img/ico.ico",   
+    "48": "img/ico.ico",   
+    "128": "img/ico.ico"   
+  },
+  "background": {
+    "service_worker": "background.js"  
+  },
+  "chrome_url_overrides": {
+    "newtab": "index.html"  
+  }
+}

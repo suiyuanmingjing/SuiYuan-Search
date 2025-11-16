@@ -1,0 +1,2018 @@
+<!--
+	========================================
+	SuiYuan Search - 设置页面
+	========================================
+	
+	文件说明：
+	- 这是扩展的设置弹窗页面，点击扩展图标时显示
+	- 提供完整的设置选项界面，包括搜索引擎、主题、背景等配置
+	- 使用模态框和折叠面板提供良好的用户体验
+	
+	设置功能：
+	1. 搜索引擎管理（内置+自定义）
+	2. 主题模式设置
+	3. 背景类型配置
+	4. 动画效果选择
+	5. 显示选项设置
+	
+	技术特点：
+	- 使用CSS Grid实现响应式布局
+	- 使用CSS变量支持主题切换
+	- 使用模态框管理自定义引擎添加
+	- 使用折叠面板组织设置选项
+	- 实时预览设置效果
+-->
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- 基础元信息 -->
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>SuiYuan Search 设置</title>
+		<style>
+			/* 全局滚轮条样式 */
+			::-webkit-scrollbar {
+				width: 8px;
+				height: 8px;
+			}
+			
+			::-webkit-scrollbar-track {
+				background: rgba(0, 0, 0, 0.1);
+				border-radius: 4px;
+			}
+			
+			::-webkit-scrollbar-thumb {
+				background: rgba(0, 0, 0, 0.3);
+				border-radius: 4px;
+				transition: background 0.3s ease;
+			}
+			
+			::-webkit-scrollbar-thumb:hover {
+				background: rgba(0, 0, 0, 0.5);
+			}
+			
+			/* 暗色主题下的滚轮条 */
+			body.dark-mode ::-webkit-scrollbar-track {
+				background: rgba(255, 255, 255, 0.1);
+			}
+			
+			body.dark-mode ::-webkit-scrollbar-thumb {
+				background: rgba(255, 255, 255, 0.3);
+			}
+			
+			body.dark-mode ::-webkit-scrollbar-thumb:hover {
+				background: rgba(255, 255, 255, 0.5);
+			}
+			
+			html {
+				width: 380px;
+				height: 480px;
+				overflow: hidden;
+				background: transparent;
+			}
+			
+			body {
+				padding: 0;
+				margin: 0;
+				background: transparent;
+				overflow: hidden;
+				width: 380px;
+				height: 480px;
+				font-family: 'Arial', sans-serif;
+				color: #333;
+				transition: background 0.3s ease;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+			
+			.settings-container {
+				padding: 20px;
+				background: rgba(255, 255, 255, 0.95);
+				margin: 0;
+				border-radius: 15px;
+				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+				backdrop-filter: blur(10px);
+				width: 340px;
+				height: 440px;
+				overflow-y: scroll;
+				box-sizing: border-box;
+				font-size: 11px;
+			}
+			
+			/* 优化滚动条样式，使用overlay模式不占用布局空间 */
+			.settings-container::-webkit-scrollbar {
+				width: 6px;
+			}
+			
+			.settings-container::-webkit-scrollbar-track {
+				background: transparent;
+			}
+			
+			.settings-container::-webkit-scrollbar-thumb {
+				background: rgba(0, 0, 0, 0.2);
+				border-radius: 3px;
+				transition: background 0.3s ease;
+			}
+			
+			.settings-container::-webkit-scrollbar-thumb:hover {
+				background: rgba(0, 0, 0, 0.3);
+			}
+			
+			/* 暗色模式下的滚动条 */
+			body.dark-mode .settings-container::-webkit-scrollbar-track {
+				background: transparent;
+			}
+			
+			body.dark-mode .settings-container::-webkit-scrollbar-thumb {
+				background: rgba(255, 255, 255, 0.2);
+			}
+			
+			body.dark-mode .settings-container::-webkit-scrollbar-thumb:hover {
+				background: rgba(255, 255, 255, 0.3);
+			}
+			
+			/* 修复暗色模式下所有可滚动div的滚动条样式 */
+			body.dark-mode div::-webkit-scrollbar {
+				width: 6px;
+				height: 6px;
+			}
+			
+			body.dark-mode div::-webkit-scrollbar-track {
+				background: rgba(255, 255, 255, 0.1);
+				border-radius: 3px;
+			}
+			
+			body.dark-mode div::-webkit-scrollbar-thumb {
+				background: rgba(255, 255, 255, 0.3);
+				border-radius: 3px;
+				transition: background 0.3s ease;
+			}
+			
+			body.dark-mode div::-webkit-scrollbar-thumb:hover {
+				background: rgba(255, 255, 255, 0.5);
+			}
+			
+			/* 针对特定容器的滚动条样式 */
+			body.dark-mode .setting-content::-webkit-scrollbar {
+				width: 6px;
+			}
+			
+			body.dark-mode .setting-content::-webkit-scrollbar-track {
+				background: rgba(255, 255, 255, 0.05);
+			}
+			
+			body.dark-mode .setting-content::-webkit-scrollbar-thumb {
+				background: rgba(255, 255, 255, 0.2);
+				border-radius: 3px;
+			}
+			
+			body.dark-mode .setting-content::-webkit-scrollbar-thumb:hover {
+				background: rgba(255, 255, 255, 0.3);
+			}
+			
+			body.dark-mode #bookmarks-list::-webkit-scrollbar {
+				width: 6px;
+			}
+			
+			body.dark-mode #bookmarks-list::-webkit-scrollbar-track {
+				background: rgba(255, 255, 255, 0.05);
+			}
+			
+			body.dark-mode #bookmarks-list::-webkit-scrollbar-thumb {
+				background: rgba(255, 255, 255, 0.2);
+				border-radius: 3px;
+			}
+			
+			body.dark-mode #bookmarks-list::-webkit-scrollbar-thumb:hover {
+				background: rgba(255, 255, 255, 0.3);
+			}
+			
+			h1 {
+				font-size: 20px;
+				font-weight: bold;
+				color: #333;
+				text-align: center;
+				margin-bottom: 25px;
+				font-family: 'Arial', sans-serif;
+				letter-spacing: 1px;
+			}
+			
+			.setting-group {
+				margin-bottom: 15px;
+				border: 1px solid #e0e0e0;
+				border-radius: 10px;
+				overflow: hidden;
+				transition: all 0.3s ease;
+			}
+			
+			.setting-group:last-child {
+				margin-bottom: 0;
+			}
+			
+			.setting-header {
+				padding: 15px;
+				background: #f8f9fa;
+				cursor: pointer;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				transition: background 0.3s ease;
+			}
+			
+			.setting-header:hover {
+				background: #e9ecef;
+			}
+			
+			.setting-header.active {
+				background: #39c5bb;
+				color: white;
+			}
+			
+			.setting-title {
+				font-size: 12px;
+				font-weight: 600;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			
+			.setting-arrow {
+				font-size: 12px;
+				transition: transform 0.3s ease;
+			}
+			
+			.setting-header.active .setting-arrow {
+				transform: rotate(180deg);
+			}
+			
+			.setting-content {
+				max-height: 0;
+				overflow: hidden;
+				transition: max-height 0.3s ease;
+				background: white;
+				padding: 0 16px;
+			}
+			
+			.setting-content.expanded {
+				max-height: 450px;
+				overflow-y: auto;
+				padding: 10px;
+			}
+			
+			.setting-content.expanded::-webkit-scrollbar {
+				width: 6px;
+			}
+			
+			.setting-content.expanded::-webkit-scrollbar-track {
+				background: #f1f1f1;
+				border-radius: 3px;
+			}
+			
+			.setting-content.expanded::-webkit-scrollbar-thumb {
+				background: #c1c1c1;
+				border-radius: 3px;
+			}
+			
+			.setting-content.expanded::-webkit-scrollbar-thumb:hover {
+				background: #a8a8a8;
+			}
+			
+			.setting-description {
+				padding: 0 15px 10px;
+				font-size: 11px;
+				color: #888;
+				line-height: 1.4;
+			}
+			
+			.radio-group, .select-group {
+				padding: 0 0 12px;
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				margin-top: 5px;
+			}
+			
+			.radio-option, .select-option {
+				display: flex;
+				align-items: center;
+				padding: 10px 12px;
+				background: #f8f9fa;
+				border-radius: 8px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				border: 2px solid transparent;
+			}
+			
+			.radio-option:hover, .select-option:hover {
+				background: #e9ecef;
+				border-color: #39c5bb;
+			}
+			
+			
+			
+			.radio-option input[type="radio"] {
+				margin-right: 10px;
+				width: 16px;
+				height: 16px;
+			}
+			
+			.radio-option label {
+				cursor: pointer;
+				flex: 1;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-size: 12px;
+			}
+			
+			.select-option label {
+				cursor: pointer;
+				flex: 1;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-size: 12px;
+			}
+			
+			.engine-icon {
+				width: 20px;
+				height: 20px;
+				margin-right: 10px;
+				border-radius: 50%;
+			}
+			
+			.save-button {
+				width: 100%;
+				padding: 12px;
+				background: linear-gradient(135deg, #39c5bb 0%, #2ea39a 100%);
+				color: white;
+				border: none;
+				border-radius: 8px;
+				font-size: 10px;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				margin-top: 15px;
+			}
+			
+			.save-button:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(57, 197, 187, 0.3);
+			}
+			
+			.save-button:active {
+				transform: translateY(0);
+			}
+			
+			.status-message {
+				text-align: center;
+				padding: 10px;
+				margin-top: 15px;
+				border-radius: 6px;
+				font-size: 11px;
+				opacity: 0;
+				transition: opacity 0.3s ease;
+			}
+			
+			.status-message.success {
+				background: #d4edda;
+				color: #155724;
+				border: 1px solid #c3e6cb;
+			}
+			
+			.status-message.show {
+			opacity: 1;
+			transform: translateY(0);
+		}
+		
+		/* 自定义搜索引擎样式 */
+		.custom-engine-controls {
+			margin-top: 15px;
+			padding-top: 15px;
+			border-top: 1px solid #e2e8f0;
+		}
+		
+		.engine-actions {
+			display: flex;
+			justify-content: space-between;
+			margin-bottom: 15px;
+			gap: 10px;
+		}
+		
+		.add-engine-btn {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			border: none;
+			padding: 8px 16px;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 12px;
+			transition: all 0.3s ease;
+		}
+		
+		.add-engine-btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+		}
+		
+		.custom-engine-option {
+			position: relative;
+		}
+		
+		.custom-engine-option .delete-engine {
+			position: absolute;
+			right: 8px;
+			top: 50%;
+			transform: translateY(-50%);
+			background: #ef4444;
+			color: white;
+			border: none;
+			border-radius: 50%;
+			width: 20px;
+			height: 20px;
+			cursor: pointer;
+			font-size: 10px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			opacity: 0;
+			transition: opacity 0.3s ease;
+		}
+		
+		.custom-engine-option:hover .delete-engine {
+			opacity: 1;
+		}
+		
+		/* 弹窗样式 */
+		.modal {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.5);
+			z-index: 1000;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		
+		.modal-content {
+			background: white;
+			border-radius: 12px;
+			width: 90%;
+			max-width: 500px;
+			max-height: 90vh;
+			overflow-y: auto;
+			box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+		}
+		
+		.modal-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 20px 24px 16px;
+			border-bottom: 1px solid #e2e8f0;
+		}
+		
+		.modal-header h3 {
+			margin: 0;
+			font-size: 14px;
+			font-weight: 600;
+			color: #1f2937;
+		}
+		
+		.close-modal {
+			background: none;
+			border: none;
+			font-size: 24px;
+			cursor: pointer;
+			color: #6b7280;
+			width: 32px;
+			height: 32px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 6px;
+			transition: all 0.2s ease;
+		}
+		
+		.close-modal:hover {
+			background: #f3f4f6;
+			color: #1f2937;
+		}
+		
+		.modal-body {
+			padding: 20px 24px;
+		}
+		
+		.form-group {
+				margin-bottom: 15px;
+			}
+		
+		.form-group label {
+			display: block;
+			margin-bottom: 6px;
+			font-weight: 500;
+			color: #374151;
+			font-size: 11px;
+		}
+		
+		.form-group input {
+			width: 100%;
+			padding: 10px 12px;
+			border: 1px solid #d1d5db;
+			border-radius: 6px;
+			font-size: 11px;
+			transition: border-color 0.2s ease;
+		}
+		
+		/* 标题文字输入框特定样式 */
+		#title-text-input {
+			width: 215px;
+		}
+		
+		.form-group input:focus {
+			outline: none;
+			border-color: #667eea;
+			box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+		}
+		
+		.form-group small {
+			display: block;
+			margin-top: 4px;
+			color: #6b7280;
+			font-size: 12px;
+		}
+		
+		.modal-footer {
+			display: flex;
+			justify-content: flex-end;
+			gap: 12px;
+			padding: 16px 24px 20px;
+			border-top: 1px solid #e2e8f0;
+		}
+		
+		.save-btn, .cancel-btn {
+			padding: 8px 16px;
+			border-radius: 6px;
+			font-size: 11px;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			border: none;
+		}
+		
+		.fetch-icon-btn {
+			background-color: #007bff;
+			color: white;
+			padding: 8px 12px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 11px;
+			white-space: nowrap;
+			transition: background-color 0.3s ease;
+		}
+		
+		.fetch-icon-btn:hover {
+			background-color: #0056b3;
+		}
+		
+		.fetch-icon-btn:disabled {
+			background-color: #ccc;
+			cursor: not-allowed;
+		}
+		
+		.save-btn {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+		}
+		
+		.save-btn:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+		}
+		
+		.cancel-btn {
+			background: #f3f4f6;
+			color: #6b7280;
+		}
+		
+		.cancel-btn:hover {
+			background: #e5e7eb;
+		}
+		
+		/* 子设置样式 */
+			.sub-settings {
+				margin-top: 10px;
+				padding: 12px;
+				background: #f8f9fa;
+				border-radius: 8px;
+				border: 1px solid #e9ecef;
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+			}
+			
+			.setting-subtitle {
+				font-weight: bold;
+				margin-bottom: 10px;
+				color: #2c3e50;
+				font-size: 11px;
+			}
+			
+			/* 颜色选择器样式 */
+			.color-picker-group {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+			}
+			
+			.color-picker-group label {
+				font-weight: 500;
+				color: #34495e;
+			}
+			
+			.preset-colors {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				margin-top: 8px;
+				padding: 8px;
+				background: rgba(255, 255, 255, 0.5);
+				border-radius: 8px;
+				border: 1px solid rgba(0, 0, 0, 0.1);
+			}
+			
+			/* 暗色模式下的预设颜色容器 */
+			body.dark-mode .preset-colors {
+				background: rgba(52, 73, 94, 0.5);
+				border-color: rgba(255, 255, 255, 0.1);
+			}
+			
+			.color-preset {
+				width: 32px;
+				height: 32px;
+				border-radius: 8px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				border: 2px solid transparent;
+				position: relative;
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			}
+			
+			.color-preset:hover {
+				transform: scale(1.15) translateY(-2px);
+				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+				border-color: rgba(52, 152, 219, 0.5);
+			}
+			
+			.color-preset:active {
+				transform: scale(1.05);
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+			}
+			
+			/* 为预设颜色添加工具提示 */
+			.color-preset[title]:hover::after {
+				content: attr(title);
+				position: absolute;
+				bottom: -30px;
+				left: 50%;
+				transform: translateX(-50%);
+				background: rgba(0, 0, 0, 0.8);
+				color: white;
+				padding: 4px 8px;
+				border-radius: 4px;
+				font-size: 12px;
+				white-space: nowrap;
+				z-index: 1000;
+				pointer-events: none;
+			}
+			
+			/* 渐变选择器样式 */
+			.gradient-picker-group {
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+			}
+			
+			.gradient-row {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			
+			.gradient-row label {
+				font-weight: 500;
+				color: #34495e;
+				min-width: 80px;
+			}
+			
+			.gradient-row input[type="color"] {
+				width: 50px;
+				height: 35px;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+			}
+			
+			.gradient-row select {
+				padding: 5px 10px;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				background: white;
+			}
+			
+			/* 图片上传样式 */
+			.image-upload-group {
+				display: flex;
+				flex-direction: column;
+				gap: 15px;
+			}
+			
+			.upload-section {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+			
+			.upload-section label {
+				font-weight: 500;
+				color: #34495e;
+			}
+			
+			.upload-section input[type="file"] {
+				padding: 8px;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				background: white;
+			}
+			
+			.image-preview {
+				width: 100%;
+				height: 60px;
+				border: 2px dashed #ddd;
+				border-radius: 4px;
+				background-size: cover;
+				background-position: center;
+				background-repeat: no-repeat;
+			}
+			
+			.video-preview {
+				width: 100%;
+				height: 60px;
+				border: 2px dashed #ddd;
+				border-radius: 4px;
+				background: #f9f9f9;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			
+			.video-preview video {
+				width: 100%;
+				height: 60px;
+				object-fit: cover;
+				border-radius: 4px;
+			}
+			
+			.video-preview .placeholder {
+				color: #999;
+				font-size: 12px;
+			}
+			
+			/* 图片控制样式 */
+			.image-controls {
+				margin-top: 15px;
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+			}
+			
+			.control-row {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			
+			.control-row label {
+				font-weight: 500;
+				color: #34495e;
+				min-width: 60px;
+			}
+			
+			.control-row input[type="range"] {
+				flex: 1;
+			}
+			
+			.control-row span {
+				min-width: 50px;
+				text-align: right;
+				font-weight: 500;
+				color: #2c3e50;
+			}
+			
+			/* 暗色模式 */
+			body.dark-mode {
+				background: transparent;
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .settings-container {
+				background: rgba(22, 33, 62, 0.95);
+				border: 1px solid rgba(52, 73, 94, 0.3);
+				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+				backdrop-filter: blur(10px);
+				width: 360px;
+				height: 440px;
+				overflow-y: auto;
+				box-sizing: border-box;
+				margin: 0;
+			}
+			
+			/* 暗色模式下的标题优化 */
+			body.dark-mode h1 {
+				color: #ffffff;
+				text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+				font-weight: 700;
+				letter-spacing: 1.2px;
+			}
+			
+			body.dark-mode .settings-title {
+				color: #ecf0f1;
+				text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+			}
+			
+			body.dark-mode .setting-content {
+				background: rgba(26, 26, 46, 0.6);
+			}
+			
+			body.dark-mode .setting-header {
+				background: rgba(52, 73, 94, 0.4);
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .setting-header:hover {
+				background: rgba(52, 73, 94, 0.6);
+			}
+			
+			body.dark-mode .setting-header.active {
+				background: linear-gradient(135deg, #3498db, #2980b9);
+				color: white;
+				text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+			}
+			
+			/* 优化设置组标题的视觉效果 */
+			body.dark-mode .setting-title {
+				color: #ffffff;
+				font-weight: 600;
+				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+			}
+			
+			body.dark-mode .setting-header:hover .setting-title {
+				color: #ffffff;
+				text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+			}
+			
+			body.dark-mode .setting-description {
+				color: #bdc3c7;
+			}
+			
+			body.dark-mode .radio-option, 
+			body.dark-mode .select-option {
+				background: rgba(52, 73, 94, 0.3);
+				border-color: rgba(52, 73, 94, 0.5);
+				color: #ecf0f1;
+				transition: all 0.3s ease;
+			}
+			
+			body.dark-mode .radio-option:hover, 
+			body.dark-mode .select-option:hover {
+				background: rgba(52, 152, 219, 0.3);
+				border-color: #3498db;
+				transform: translateY(-1px);
+			}
+			
+			body.dark-mode .radio-option.selected, 
+			body.dark-mode .select-option.selected {
+				background: linear-gradient(135deg, #3498db, #2980b9);
+				color: white;
+				border-color: #3498db;
+				box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+			}
+			
+			body.dark-mode .save-button {
+				background: linear-gradient(135deg, #3498db, #2980b9);
+				color: white;
+				border: none;
+				box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+				transition: all 0.3s ease;
+			}
+			
+			body.dark-mode .save-button:hover {
+				background: linear-gradient(135deg, #2980b9, #21618c);
+				transform: translateY(-2px);
+				box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+			}
+			
+			/* 暗色模式下的子设置样式 */
+			body.dark-mode .sub-settings {
+				background: rgba(52, 73, 94, 0.5);
+				border-color: #34495e;
+			}
+			
+			body.dark-mode .setting-subtitle {
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .color-picker-group label,
+			body.dark-mode .gradient-row label,
+			body.dark-mode .upload-section label,
+			body.dark-mode .control-row label {
+				color: #bdc3c7;
+			}
+			
+			body.dark-mode .gradient-row select,
+			body.dark-mode .upload-section input[type="file"] {
+				background: #34495e;
+				border-color: #4a5f7a;
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .image-preview {
+				border-color: #4a5f7a;
+			}
+			
+			body.dark-mode .control-row span {
+				color: #ecf0f1;
+			}
+			
+			/* 优化暗色主题下的文字颜色 */
+			body.dark-mode .radio-option label {
+				color: #ecf0f1;
+				font-weight: 500;
+			}
+			
+			body.dark-mode .setting-title span {
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .setting-arrow {
+				color: #bdc3c7;
+			}
+			
+			body.dark-mode .setting-header:hover .setting-arrow {
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .add-engine-btn {
+				background: rgba(52, 152, 219, 0.2);
+				color: #ecf0f1;
+				border: 1px solid rgba(52, 152, 219, 0.3);
+			}
+			
+			body.dark-mode .add-engine-btn:hover {
+				background: rgba(52, 152, 219, 0.3);
+				border-color: #3498db;
+				color: white;
+			}
+			
+			/* 收藏夹管理样式 */
+			.bookmark-actions {
+			display: flex;
+			justify-content: space-between;
+			margin-bottom: 15px;
+			gap: 10px;
+		}
+		
+		.import-export-actions {
+			display: flex;
+			justify-content: space-between;
+			gap: 10px;
+		}
+			
+			.bookmark-drag-handle {
+				cursor: grab;
+				color: #999;
+				font-size: 12px;
+				padding: 0 8px;
+				display: flex;
+				align-items: center;
+				user-select: none;
+				transition: color 0.2s ease;
+			}
+			
+			.bookmark-drag-handle:hover {
+				color: #666;
+			}
+			
+			.bookmark-drag-handle:active {
+				cursor: grabbing;
+			}
+			
+			.bookmark-item {
+				display: flex;
+				align-items: center;
+				padding: 10px;
+				margin-bottom: 8px;
+				background: white;
+				border: 1px solid #e0e0e0;
+				border-radius: 6px;
+				transition: all 0.3s ease;
+			}
+			
+			.bookmark-item:hover {
+				background: #f8f9fa;
+				border-color: #3498db;
+				transform: translateY(-1px);
+				box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+			}
+			
+			.bookmark-item.dragging {
+				opacity: 0.5;
+				transform: rotate(5deg);
+			}
+			
+			.bookmark-item.bookmark-placeholder {
+				border: 2px dashed #3498db;
+				background: rgba(52, 152, 219, 0.1);
+			}
+			
+			.bookmark-icon {
+				width: 24px;
+				height: 24px;
+				margin-right: 12px;
+				border-radius: 4px;
+				object-fit: cover;
+				background: #f0f0f0;
+			}
+			
+			.bookmark-info {
+				flex: 1;
+				min-width: 0;
+			}
+			
+			.bookmark-title {
+				font-weight: 500;
+				color: #2c3e50;
+				margin-bottom: 2px;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			
+			.bookmark-url {
+				font-size: 12px;
+				color: #7f8c8d;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			
+			.bookmark-actions-group {
+				display: flex;
+				gap: 5px;
+			}
+			
+			.bookmark-btn {
+				padding: 4px 8px;
+				border: none;
+				border-radius: 4px;
+				font-size: 12px;
+				cursor: pointer;
+				transition: all 0.2s ease;
+			}
+			
+			.bookmark-edit-btn {
+				background: #3498db;
+				color: white;
+			}
+			
+			.bookmark-edit-btn:hover {
+				background: #2980b9;
+			}
+			
+			.bookmark-delete-btn {
+				background: #e74c3c;
+				color: white;
+			}
+			
+			.bookmark-delete-btn:hover {
+				background: #c0392b;
+			}
+			
+			.bookmark-pin-btn {
+				background: #9b59b6;
+				color: white;
+				font-weight: bold;
+				min-width: 30px;
+			}
+			
+			.bookmark-pin-btn:hover:not(:disabled) {
+				background: #8e44ad;
+			}
+			
+			.bookmark-pin-btn:disabled {
+				background: #bdc3c7;
+				cursor: not-allowed;
+				opacity: 0.5;
+			}
+			
+			.bookmark-move-up-btn {
+				background: #27ae60;
+				color: white;
+				font-weight: bold;
+				min-width: 30px;
+			}
+			
+			.bookmark-move-up-btn:hover:not(:disabled) {
+				background: #229954;
+			}
+			
+			.bookmark-move-up-btn:disabled {
+				background: #bdc3c7;
+				cursor: not-allowed;
+				opacity: 0.5;
+			}
+			
+			.bookmark-move-down-btn {
+				background: #f39c12;
+				color: white;
+				font-weight: bold;
+				min-width: 30px;
+			}
+			
+			.bookmark-move-down-btn:hover:not(:disabled) {
+				background: #e67e22;
+			}
+			
+			.bookmark-move-down-btn:disabled {
+				background: #bdc3c7;
+				cursor: not-allowed;
+				opacity: 0.5;
+			}
+			
+			.delete-btn {
+				background: #e74c3c;
+				color: white;
+				border: none;
+				border-radius: 4px;
+				padding: 4px 8px;
+				font-size: 11px;
+				cursor: pointer;
+				transition: all 0.2s ease;
+			}
+			
+			.delete-btn:hover {
+				background: #c0392b;
+			}
+			
+			.empty-bookmarks {
+				text-align: center;
+				color: #999;
+				padding: 20px;
+				font-size: 14px;
+			}
+			
+			/* 收藏夹编辑表单样式 */
+			.bookmark-edit-form {
+				background: #f8f9fa;
+				border: 1px solid #e0e0e0;
+				border-radius: 8px;
+				padding: 12px;
+				margin: 12px 0;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			}
+			
+			.bookmark-edit-form .form-group {
+				margin-bottom: 12px;
+			}
+			
+			.bookmark-edit-form label {
+				display: block;
+				margin-bottom: 5px;
+				font-size: 13px;
+				color: #333;
+				font-weight: 500;
+			}
+			
+			.bookmark-edit-form input[type="text"],
+			.bookmark-edit-form input[type="url"] {
+				width: 85%;
+				padding: 6px 8px;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				font-size: 12px;
+				transition: border-color 0.3s ease;
+				margin: 0 auto;
+				display: block;
+			}
+			
+			.bookmark-edit-form input[type="text"]:focus,
+			.bookmark-edit-form input[type="url"]:focus {
+				outline: none;
+				border-color: #3498db;
+				box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+			}
+			
+			.bookmark-edit-form .form-actions {
+				text-align: center;
+				margin-top: 15px;
+			}
+			
+			.bookmark-edit-form .save-btn {
+				background: #27ae60;
+				color: white;
+				border: none;
+				padding: 6px 16px;
+				border-radius: 4px;
+				font-size: 13px;
+				cursor: pointer;
+				margin-right: 10px;
+				transition: background-color 0.3s ease;
+			}
+			
+			.bookmark-edit-form .save-btn:hover {
+				background: #229954;
+			}
+			
+			.bookmark-edit-form .cancel-btn {
+				background: #95a5a6;
+				color: white;
+				border: none;
+				padding: 6px 16px;
+				border-radius: 4px;
+				font-size: 13px;
+				cursor: pointer;
+				transition: background-color 0.3s ease;
+			}
+			
+			.bookmark-edit-form .cancel-btn:hover {
+				background: #7f8c8d;
+			}
+			
+			/* 暗色模式下的收藏夹编辑表单 */
+			body.dark-mode .bookmark-edit-form {
+				background: rgba(52, 73, 94, 0.8);
+				border-color: #4a5f7a;
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .bookmark-edit-form label {
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .bookmark-edit-form input[type="text"],
+			body.dark-mode .bookmark-edit-form input[type="url"] {
+				background: #34495e;
+				border-color: #4a5f7a;
+				color: #ecf0f1;
+				width: 85%;
+				padding: 6px 8px;
+				font-size: 12px;
+				margin: 0 auto;
+				display: block;
+			}
+			
+			body.dark-mode .bookmark-edit-form input[type="text"]:focus,
+			body.dark-mode .bookmark-edit-form input[type="url"]:focus {
+				border-color: #3498db;
+				box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+			}
+			
+			body.dark-mode .bookmark-item {
+				background: rgba(52, 73, 94, 0.8);
+				border-color: #4a5f7a;
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .bookmark-item:hover {
+				background: rgba(52, 73, 94, 0.9);
+				border-color: #3498db;
+			}
+			
+			body.dark-mode .bookmark-drag-handle {
+				color: #bdc3c7;
+			}
+			
+			body.dark-mode .bookmark-drag-handle:hover {
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .bookmark-item.bookmark-placeholder {
+				border-color: #3498db;
+				background: rgba(52, 152, 219, 0.2);
+			}
+			
+			body.dark-mode .bookmark-title {
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .bookmark-url {
+				color: #bdc3c7;
+			}
+			
+			body.dark-mode .bookmark-stats {
+				background: rgba(52, 73, 94, 0.5);
+				color: #ecf0f1;
+			}
+			
+			/* 编辑顺序按钮样式 */
+			.edit-order-btn {
+				padding: 2px 8px;
+				font-size: 11px;
+				background: #28a745;
+				color: white;
+				border: none;
+				border-radius: 3px;
+				cursor: pointer;
+				margin-right: 5px;
+			}
+			
+			.edit-order-btn:hover {
+				background: #218838;
+			}
+			
+			body.dark-mode .edit-order-btn {
+				background: #28a745;
+				color: white;
+			}
+			
+			body.dark-mode .edit-order-btn:hover {
+				background: #218838;
+			}
+			
+			/* 撤销按钮样式 */
+			.undo-btn {
+				background: #f39c12;
+				color: white;
+				border: none;
+				border-radius: 3px;
+				padding: 2px 8px;
+				font-size: 11px;
+				cursor: pointer;
+				transition: background-color 0.2s ease;
+			}
+			
+			.undo-btn:hover {
+				background: #e67e22;
+			}
+			
+			body.dark-mode .undo-btn {
+				background: #f39c12;
+				color: white;
+			}
+			
+			body.dark-mode .undo-btn:hover {
+				background: #e67e22;
+			}
+			
+			/* 编辑模式样式 */
+			#bookmarks-list:not(.edit-mode) .bookmark-actions-group {
+				display: none;
+			}
+			
+			#bookmarks-list.edit-mode .bookmark-actions-group {
+				display: flex;
+			}
+			
+			body.dark-mode .bookmark-pin-btn {
+				background: #9b59b6;
+				color: white;
+			}
+			
+			body.dark-mode .bookmark-pin-btn:hover:not(:disabled) {
+				background: #8e44ad;
+			}
+			
+			body.dark-mode .bookmark-pin-btn:disabled {
+				background: #5d6d7e;
+				cursor: not-allowed;
+				opacity: 0.5;
+			}
+			
+			body.dark-mode .bookmark-move-up-btn {
+				background: #27ae60;
+				color: white;
+			}
+			
+			body.dark-mode .bookmark-move-up-btn:hover:not(:disabled) {
+				background: #229954;
+			}
+			
+			body.dark-mode .bookmark-move-up-btn:disabled {
+				background: #5d6d7e;
+				cursor: not-allowed;
+				opacity: 0.5;
+			}
+			
+			body.dark-mode .bookmark-move-down-btn {
+				background: #f39c12;
+				color: white;
+			}
+			
+			body.dark-mode .bookmark-move-down-btn:hover:not(:disabled) {
+				background: #e67e22;
+			}
+			
+			body.dark-mode .bookmark-move-down-btn:disabled {
+				background: #5d6d7e;
+				cursor: not-allowed;
+				opacity: 0.5;
+			}
+			
+			body.dark-mode .empty-bookmarks {
+				color: #bdc3c7;
+			}
+			
+			body.dark-mode .bookmarks-container {
+				border-color: #4a5f7a;
+			}
+			
+			body.dark-mode #bookmarks-list {
+				background: rgba(52, 73, 94, 0.3);
+				border-color: #4a5f7a;
+			}
+			
+			/* 暗色模式下的收藏夹样式 */
+			body.dark-mode .bookmark-item {
+				background: rgba(52, 73, 94, 0.8);
+				border-color: #4a5f7a;
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .bookmark-item:hover {
+				background: rgba(52, 73, 94, 0.9);
+				border-color: #3498db;
+			}
+			
+			body.dark-mode .bookmark-title {
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .bookmark-url {
+				color: #bdc3c7;
+			}
+			
+			body.dark-mode .bookmark-stats {
+				background: rgba(52, 73, 94, 0.5);
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .empty-bookmarks {
+				color: #bdc3c7;
+			}
+			
+			body.dark-mode .bookmarks-container {
+				border-color: #4a5f7a;
+			}
+			
+			body.dark-mode #bookmarks-list {
+				background: rgba(52, 73, 94, 0.3);
+				border-color: #4a5f7a;
+			}
+			
+			/* 暗色模式下的输入框和表单元素 */
+			body.dark-mode input[type="text"],
+			body.dark-mode input[type="url"],
+			body.dark-mode input[type="color"],
+			body.dark-mode select,
+			body.dark-mode textarea {
+				background: rgba(52, 73, 94, 0.6);
+				border: 1px solid rgba(52, 152, 219, 0.3);
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode input[type="text"]:focus,
+			body.dark-mode input[type="url"]:focus,
+			body.dark-mode input[type="color"]:focus,
+			body.dark-mode select:focus,
+			body.dark-mode textarea:focus {
+				border-color: #3498db;
+				box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode input[type="text"]::placeholder,
+			body.dark-mode input[type="url"]::placeholder,
+			body.dark-mode textarea::placeholder {
+				color: rgba(236, 240, 241, 0.5);
+			}
+			
+			/* 暗色模式下的模态框 */
+			body.dark-mode .modal-content {
+				background: rgba(22, 33, 62, 0.95);
+				border: 1px solid rgba(52, 73, 94, 0.3);
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .modal-header {
+				background: rgba(52, 73, 94, 0.4);
+				border-bottom: 1px solid rgba(52, 73, 94, 0.3);
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .modal-header h3 {
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .close-modal {
+				color: #bdc3c7;
+			}
+			
+			body.dark-mode .close-modal:hover {
+				color: #ecf0f1;
+			}
+			
+			body.dark-mode .form-group label {
+				color: #bdc3c7;
+			}
+			
+			/* 暗色模式下的状态消息 */
+			body.dark-mode .status-message {
+				background: rgba(52, 73, 94, 0.8);
+				color: #ecf0f1;
+				border: 1px solid rgba(52, 152, 219, 0.3);
+			}
+			
+			body.dark-mode .status-message.success {
+				background: rgba(39, 174, 96, 0.2);
+				border-color: rgba(39, 174, 96, 0.3);
+				color: #2ecc71;
+			}
+			
+			body.dark-mode .status-message.error {
+				background: rgba(231, 76, 60, 0.2);
+				border-color: rgba(231, 76, 60, 0.3);
+				color: #e74c3c;
+			}
+			
+			body.dark-mode .status-message.warning {
+				background: rgba(243, 156, 18, 0.2);
+				border-color: rgba(243, 156, 18, 0.3);
+				color: #f39c12;
+			}
+			
+			/* 暗色模式下的删除按钮 */
+			body.dark-mode .delete-engine {
+				background: rgba(231, 76, 60, 0.2);
+				color: #e74c3c;
+				border: 1px solid rgba(231, 76, 60, 0.3);
+			}
+			
+			body.dark-mode .delete-engine:hover {
+				background: rgba(231, 76, 60, 0.3);
+				color: #c0392b;
+			}
+			
+			/* 暗色模式下的编辑按钮 */
+			body.dark-mode .edit-engine {
+				background: rgba(52, 152, 219, 0.2);
+				color: #3498db;
+				border: 1px solid rgba(52, 152, 219, 0.3);
+			}
+			
+			body.dark-mode .edit-engine:hover {
+				background: rgba(52, 152, 219, 0.3);
+				color: #2980b9;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div class="settings-container">
+			<h1>⚙️ 起始页设置</h1>
+			
+			<!-- 默认搜索引擎设置 -->
+			<div class="setting-group">
+				<div class="setting-header">
+					<div class="setting-title">
+						<span>🔍</span>
+						<span>默认搜索引擎</span>
+					</div>
+					<span class="setting-arrow">▼</span>
+				</div>
+				<div class="setting-content">
+					<div class="setting-description">选择新标签页默认使用的搜索引擎</div>
+					<div class="radio-group">
+						<div class="radio-option" data-engine="bing">
+							<input type="radio" name="searchEngine" value="bing" id="engine-bing">
+							<img src="img/bing.png" alt="必应" class="engine-icon">
+							<label for="engine-bing">必应搜索</label>
+						</div>
+						<div class="radio-option" data-engine="google">
+							<input type="radio" name="searchEngine" value="google" id="engine-google">
+							<img src="img/Google.png" alt="谷歌" class="engine-icon">
+							<label for="engine-google">谷歌搜索</label>
+						</div>
+						<div class="radio-option" data-engine="baidu">
+							<input type="radio" name="searchEngine" value="baidu" id="engine-baidu">
+							<img src="img/baidu.png" alt="百度" class="engine-icon">
+							<label for="engine-baidu">百度搜索</label>
+						</div>
+						<div id="custom-engines-container"></div>
+					</div>
+					
+					<div class="custom-engine-controls">
+						<div class="engine-actions">
+							<button id="add-current-page-engine" class="save-button" style="width: 48%; margin-right: 4%;">
+								⭐ 添加当前页面
+							</button>
+							<button id="add-engine-btn" class="save-button" style="width: 48%;">
+								➕ 添加搜索引擎
+							</button>
+						</div>
+					</div>
+					
+					<!-- 添加搜索引擎弹窗 -->
+					<div id="add-engine-modal" class="modal" style="display: none;">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h3>添加自定义搜索引擎</h3>
+								<span class="close-modal">&times;</span>
+							</div>
+							<div class="modal-body">
+								<div class="form-group">
+									<label for="engine-name">搜索引擎名称：</label>
+									<input type="text" id="engine-name" placeholder="例如：知乎搜索" maxlength="20">
+								</div>
+								<div class="form-group">
+									<label for="engine-url">搜索URL：</label>
+									<input type="text" id="engine-url" placeholder="例如：https://www.zhihu.com/search?q=%s">
+									<small>使用 %s 作为搜索关键词的占位符</small>
+								</div>
+								<div class="form-group">
+									<label for="engine-homepage">官网地址：</label>
+									<input type="text" id="engine-homepage" placeholder="例如：https://www.zhihu.com">
+								</div>
+								<div class="form-group">
+							<label for="engine-icon">图标</label>
+							<div style="display: flex; gap: 10px; align-items: center;">
+								<input type="url" id="engine-icon" placeholder="https://example.com/icon.png" style="flex: 1;">
+								<button type="button" id="fetch-icon-btn" class="fetch-icon-btn">获取图标</button>
+							</div>
+							<div id="icon-preview" style="margin-top: 10px; text-align: center; min-height: 40px; display: none;">
+								<img id="preview-image" style="max-width: 32px; max-height: 32px;" alt="图标预览">
+							</div>
+						</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" id="save-engine-btn" class="save-btn">保存</button>
+								<button type="button" id="cancel-engine-btn" class="cancel-btn">取消</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- 背景设置 -->
+			<div class="setting-group">
+				<div class="setting-header">
+					<div class="setting-title">
+						<span>🎨</span>
+						<span>主题模式</span>
+					</div>
+					<span class="setting-arrow">▼</span>
+				</div>
+				<div class="setting-content">
+					<div class="setting-description">选择起始页的颜色主题</div>
+					<div class="select-group">
+						<div class="select-option" data-theme="light">
+							<input type="radio" name="theme" value="light" id="theme-light">
+							<label for="theme-light">☀️ 亮色主题</label>
+						</div>
+						<div class="select-option" data-theme="dark">
+							<input type="radio" name="theme" value="dark" id="theme-dark">
+							<label for="theme-dark">🌙 暗色主题</label>
+						</div>
+						<div class="select-option" data-theme="auto">
+							<input type="radio" name="theme" value="auto" id="theme-auto">
+							<label for="theme-auto">🔄 跟随系统</label>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- 背景设置 -->
+			<div class="setting-group">
+				<div class="setting-header">
+					<div class="setting-title">
+						<span>🖼️</span>
+						<span>背景设置</span>
+					</div>
+					<span class="setting-arrow">▼</span>
+				</div>
+				<div class="setting-content">
+					<div class="setting-description">选择起始页的背景样式</div>
+					<div class="select-group">
+						<div class="select-option" data-background="default">
+							<input type="radio" name="background" value="default" id="bg-default">
+							<label for="bg-default">📸 默认背景</label>
+						</div>
+						<div class="select-option" data-background="solid">
+							<input type="radio" name="background" value="solid" id="bg-solid">
+							<label for="bg-solid">🎨 纯色背景</label>
+						</div>
+						<div class="select-option" data-background="gradient">
+							<input type="radio" name="background" value="gradient" id="bg-gradient">
+							<label for="bg-gradient">🌈 渐变背景</label>
+						</div>
+						<div class="select-option" data-background="image">
+							<input type="radio" name="background" value="image" id="bg-image">
+							<label for="bg-image">🖼️ 图片背景</label>
+						</div>
+						<div class="select-option" data-background="video">
+							<input type="radio" name="background" value="video" id="bg-video">
+							<label for="bg-video">🎬 动态背景</label>
+						</div>
+					</div>
+					
+					<!-- 实时预览区域 -->
+					<div id="background-preview" style="width: 100%; height: 100px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #ddd; overflow: hidden; display: none;">
+						<div id="preview-content" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+							<span style="color: white; text-shadow: 0 0 3px rgba(0,0,0,0.5);">预览效果</span>
+						</div>
+					</div>
+					
+					<!-- 纯色背景设置 -->
+					<div class="sub-settings" id="solid-settings" style="display: none;">
+						<div class="setting-subtitle">纯色设置</div>
+						<div class="color-picker-group">
+							<label>亮色主题背景：</label>
+							<input type="color" id="solid-color" value="#f8fafc">
+							<div class="preset-colors">
+								<div class="color-preset" data-color="#f8fafc" style="background: #f8fafc; border: 1px solid #e2e8f0;" title="现代白"></div>
+								<div class="color-preset" data-color="#f1f5f9" style="background: #f1f5f9;" title="浅灰蓝"></div>
+								<div class="color-preset" data-color="#fef3c7" style="background: #fef3c7;" title="温暖黄"></div>
+								<div class="color-preset" data-color="#dbeafe" style="background: #dbeafe;" title="天空蓝"></div>
+								<div class="color-preset" data-color="#e0e7ff" style="background: #e0e7ff;" title="薰衣草紫"></div>
+								<div class="color-preset" data-color="#dcfce7" style="background: #dcfce7;" title="薄荷绿"></div>
+								<div class="color-preset" data-color="#fce7f3" style="background: #fce7f3;" title="樱花粉"></div>
+								<div class="color-preset" data-color="#f3e8ff" style="background: #f3e8ff;" title="梦幻紫"></div>
+							</div>
+						</div>
+						<div class="color-picker-group" style="margin-top: 12px;">
+							<label>暗色主题背景：</label>
+							<input type="color" id="solid-color-dark" value="#0f172a">
+							<div class="preset-colors">
+								<div class="color-preset" data-color-dark="#0f172a" style="background: #0f172a;" title="深夜蓝"></div>
+								<div class="color-preset" data-color-dark="#1e293b" style="background: #1e293b;" title="石墨灰"></div>
+								<div class="color-preset" data-color-dark="#18181b" style="background: #18181b;" title="纯黑"></div>
+								<div class="color-preset" data-color-dark="#581c87" style="background: #581c87;" title="深紫罗兰"></div>
+								<div class="color-preset" data-color-dark="#14532d" style="background: #14532d;" title="森林绿"></div>
+								<div class="color-preset" data-color-dark="#7c2d12" style="background: #7c2d12;" title="深棕色"></div>
+								<div class="color-preset" data-color-dark="#831843" style="background: #831843;" title="酒红色"></div>
+								<div class="color-preset" data-color-dark="#134e4a" style="background: #134e4a;" title="深海绿"></div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- 渐变背景设置 -->
+					<div class="sub-settings" id="gradient-settings" style="display: none;">
+						<div class="setting-subtitle">渐变设置</div>
+						<div class="gradient-picker-group">
+							<div class="gradient-row">
+								<label>起始颜色：</label>
+								<input type="color" id="gradient-start" value="#667eea">
+							</div>
+							<div class="gradient-row">
+								<label>结束颜色：</label>
+								<input type="color" id="gradient-end" value="#764ba2">
+							</div>
+							<div class="gradient-row">
+								<label>渐变方向：</label>
+								<select id="gradient-direction">
+									<option value="135deg">左上到右下</option>
+									<option value="90deg">左到右</option>
+									<option value="180deg">上到下</option>
+									<option value="45deg">左下到右上</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					
+					<!-- 图片背景设置 -->
+					<div class="sub-settings" id="image-settings" style="display: none;">
+						<div class="setting-subtitle">图片设置</div>
+						<div class="image-upload-group">
+							<div class="upload-section">
+								<label>亮色主题图片：</label>
+								<input type="file" id="image-light" accept="image/*">
+								<small style="color: #666; font-size: 12px;">支持任意大小的图片文件</small>
+								<div class="image-preview" id="preview-light"></div>
+							</div>
+							<div class="upload-section">
+								<label>暗色主题图片：</label>
+								<input type="file" id="image-dark" accept="image/*">
+								<small style="color: #666; font-size: 12px;">支持任意大小的图片文件</small>
+								<div class="image-preview" id="preview-dark"></div>
+							</div>
+						</div>
+						<div class="image-controls">
+							<div class="control-row">
+								<label>透明度：</label>
+								<input type="range" id="image-opacity" min="0" max="100" value="100">
+								<span id="opacity-value">100%</span>
+							</div>
+							<div class="control-row">
+								<label>模糊度：</label>
+								<input type="range" id="image-blur" min="0" max="20" value="0">
+								<span id="blur-value">0px</span>
+							</div>
+						</div>
+					</div>
+					
+					<!-- 视频背景设置 -->
+					<div class="sub-settings" id="video-settings" style="display: none;">
+						<div class="setting-subtitle">动态背景设置</div>
+						<div class="image-upload-group">
+							<div class="upload-section">
+								<label>背景视频：</label>
+								<input type="file" id="video" accept="video/*">
+								<small style="color: #666; font-size: 12px;">支持任意大小的视频文件</small>
+								<div id="upload-progress" style="color: #007bff; font-size: 12px; margin: 5px 0; display: none;"></div>
+								<div class="video-preview" id="preview-video">
+									<video style="width: 100%; height: 60px; object-fit: cover; border-radius: 4px;" controls></video>
+								</div>
+							</div>
+						</div>
+						
+						<!-- 视频控制 -->
+						<div class="image-controls">
+							<div class="control-row">
+								<label>透明度：</label>
+								<input type="range" id="video-opacity" min="0" max="100" value="80">
+								<span id="video-opacity-value">80%</span>
+							</div>
+							<div class="control-row">
+								<label>模糊度：</label>
+								<input type="range" id="video-blur" min="0" max="10" value="2">
+								<span id="video-blur-value">2px</span>
+							</div>
+						</div>
+
+						<!-- 确认更改按钮 -->
+						<div style="margin-top: 12px; text-align: center;">
+							<button id="confirm-video-change" class="save-btn" style="width: 80%;">确认更改</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+            <!-- 标题设置 -->
+            <div class="setting-group">
+                <div class="setting-header">
+                    <div class="setting-title">
+                        <span>🅰️</span>
+                        <span>标题设置</span>
+                    </div>
+                    <span class="setting-arrow">▼</span>
+                </div>
+                <div class="setting-content">
+                    <div class="setting-description">配置标题显示方式与样式</div>
+                    <div class="select-group">
+                        <div class="select-option" data-title="text">
+                            <input type="radio" name="titleDisplay" value="text" id="title-text">
+                            <label for="title-text">📝 显示标题文字</label>
+                        </div>
+                        <div class="select-option" data-title="time">
+                            <input type="radio" name="titleDisplay" value="time" id="title-time">
+                            <label for="title-time">🕐 显示时间</label>
+                        </div>
+                        <div class="select-option" data-title="none">
+                            <input type="radio" name="titleDisplay" value="none" id="title-none">
+                            <label for="title-none">🚫 不显示标题</label>
+                        </div>
+                    </div>
+
+                    <div class="sub-settings" id="title-style-settings" style="margin-top: 8px;">
+                        <div class="setting-subtitle" style="font-size: 12px; margin-bottom: 8px; color: #666;">标题样式</div>
+                        <div class="form-group">
+                            <label for="title-text-input">标题文字：</label>
+                            <input type="text" id="title-text-input" placeholder="例如：SuiYuan-Search">
+                        </div>
+                        <div class="form-group">
+                            <label for="title-fill-color">文本填充颜色：</label>
+                            <input type="color" id="title-fill-color" value="#ffffff">
+                        </div>
+                        <div class="form-group">
+                            <label for="title-outline-color">文本轮廓颜色：</label>
+                            <input type="color" id="title-outline-color" value="#000000">
+                        </div>
+                        
+                        <!-- 确认更改按钮 -->
+                        <div style="margin-top: 12px; text-align: center;">
+                            <button id="confirm-title-change" class="save-btn" style="width: 80%;">确认更改</button>
+                        </div>
+                    </div>
+
+                    <!-- 秒数显示设置 - 仅在选择显示时间时显示 -->
+                    <div class="sub-settings" id="seconds-settings" style="display: none; margin-top: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                        <div class="setting-subtitle" style="font-size: 12px; margin-bottom: 8px; color: #666;">时间显示设置</div>
+                        <div class="select-group">
+                            <div class="select-option" data-show-seconds="true">
+                                <input type="radio" name="show-seconds" value="true" id="seconds-on">
+                                <label for="seconds-on">⏱️ 显示秒数</label>
+                            </div>
+                            <div class="select-option" data-show-seconds="false">
+                                <input type="radio" name="show-seconds" value="false" id="seconds-off">
+                                <label for="seconds-off">🕐 隐藏秒数</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+			
+			<div class="setting-group">
+				<div class="setting-header">
+					<div class="setting-title">
+						<span>📂</span>
+						<span>收藏夹管理</span>
+					</div>
+					<span class="setting-arrow">▼</span>
+				</div>
+				<div class="setting-content">
+					<div class="setting-description">管理收藏的网页，或将当前浏览页面加入收藏夹</div>
+					
+					<!-- 收藏夹栏开关 -->
+					<div class="form-group" style="margin-bottom: 12px;">
+						<label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+							<input type="checkbox" id="bookmark-bar-toggle" style="width: 16px; height: 16px;">
+							<span style="font-size: 12px; color: #333;">显示收藏夹栏</span>
+						</label>
+					</div>
+					
+					<!-- 导入导出功能 -->
+					<div class="bookmark-import-export" style="margin-bottom: 12px;">
+						<div class="form-group">
+							<label style="display: block; margin-bottom: 8px; font-size: 12px; color: #333; font-weight: 500;">收藏夹同步</label>
+							<div class="import-export-actions">
+								<button id="export-bookmarks" class="save-button" style="width: 48%; margin-right: 4%;">
+									📤 导出收藏夹
+								</button>
+								<button id="import-bookmarks" class="save-button" style="width: 48%;">
+									📥 导入收藏夹
+								</button>
+							</div>
+							<input type="file" id="import-bookmarks-file" accept=".json" style="display: none;">
+						</div>
+					</div>
+					
+					<!-- 操作按钮区域 -->
+					<div class="bookmark-actions">
+						<button id="add-current-page" class="save-button" style="width: 48%; margin-right: 4%;">
+							⭐ 收藏当前页面
+						</button>
+						<button id="add-custom-bookmark" class="save-button" style="width: 48%;">
+							➕ 添加自定义收藏
+						</button>
+					</div>
+					
+					<!-- 收藏编辑表单 -->
+					<div id="bookmark-edit-form" class="bookmark-edit-form" style="display: none; margin: 12px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
+						<div class="form-group">
+							<label for="bookmark-title" style="display: block; margin-bottom: 5px; font-size: 13px; color: #333;">网站名称</label>
+							<input type="text" id="bookmark-title" placeholder="例如：知乎" style="width: 85%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; margin: 0 auto; display: block;">
+						</div>
+						<div class="form-group" style="margin-top: 10px;">
+							<label for="bookmark-url" style="display: block; margin-bottom: 5px; font-size: 13px; color: #333;">网站地址</label>
+							<input type="text" id="bookmark-url" placeholder="例如：https://www.zhihu.com" style="width: 85%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; margin: 0 auto; display: block;">
+						</div>
+						<div class="form-group" style="margin-top: 10px;">
+							<label for="bookmark-icon" style="display: block; margin-bottom: 5px; font-size: 13px; color: #333;">图标地址（可选）</label>
+							<input type="url" id="bookmark-icon" placeholder="例如：https://www.zhihu.com/favicon.ico" style="width: 85%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; margin: 0 auto; display: block;">
+						</div>
+						<div class="form-actions" style="margin-top: 12px; text-align: center;">
+							<button id="save-bookmark-btn" class="save-btn" style="padding: 6px 16px; margin-right: 10px;">保存</button>
+							<button id="cancel-bookmark-btn" class="cancel-btn" style="padding: 6px 16px;">取消</button>
+						</div>
+					</div>
+					
+					<!-- 收藏夹统计信息 -->
+					<div class="bookmark-stats" style="margin: 8px 0; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; font-size: 12px; color: #666;">
+						<span id="bookmark-count">共 0 个收藏</span>
+						<div style="float: right;">
+							<button id="edit-order-btn" class="edit-order-btn" style="padding: 2px 8px; font-size: 11px; margin-right: 5px;">编辑顺序</button>
+							<button id="clear-all-bookmarks" class="delete-btn" style="padding: 2px 8px; font-size: 11px; margin-right: 5px;">清空全部</button>
+							<button id="undo-clear-btn" class="undo-btn" style="padding: 2px 8px; font-size: 11px; display: none;">撤销</button>
+						</div>
+					</div>
+					
+					<!-- 收藏夹列表 -->
+					<div class="bookmarks-container">
+						<div id="bookmarks-list" style="max-height: 260px; overflow-y: auto; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fafafa;">
+							<div class="empty-bookmarks" style="text-align: center; color: #999; padding: 15px; font-size: 12px;">
+								暂无收藏的网页
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="status-message" id="statusMessage"></div>
+		</div>
+		<script src="chrome-api-mock.js"></script>
+		<script src="local-storage.js"></script>
+		<script src="popup.js"></script>
+	</body>
+</html>
