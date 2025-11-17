@@ -203,7 +203,57 @@ async function getFileFromUserImg(fileName) {
 
     
 
-    // 从存储加载设置
+    // 渲染自定义搜索引擎到主页下拉菜单
+	function renderCustomEngines() {
+		// 获取自定义搜索引擎容器元素
+		const container = document.getElementById('custom-engines-container');
+		if (!container) return;
+		
+		// 清空容器内容，准备重新渲染
+		container.innerHTML = '';
+		
+		// 遍历所有自定义搜索引擎，为每个引擎创建下拉菜单项
+		currentSettings.customEngines.forEach((engine) => {
+			// 创建下拉菜单项
+			const engineItem = document.createElement('div');
+			engineItem.className = 'dropdown-item';
+			engineItem.setAttribute('data-engine', engine.id);
+			
+			// 创建文本标签（移除图标，只显示名称）
+			const label = document.createElement('span');
+			label.textContent = engine.name;
+			
+			// 将元素添加到菜单项中
+			engineItem.appendChild(label);
+			
+			// 添加点击事件监听器
+			engineItem.addEventListener('click', function() {
+				// 切换到自定义搜索引擎
+				switchSearchEngine(engine.id);
+				
+				// 更新下拉菜单的激活状态
+				document.querySelectorAll('.dropdown-item').forEach(item => {
+					item.classList.remove('active');
+				});
+				this.classList.add('active');
+				
+				// 保存设置
+				if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+					chrome.storage.sync.set({ searchEngine: engine.id });
+				} else {
+					localStorage.setItem('searchEngine', engine.id);
+				}
+				
+				// 更新当前设置
+				currentSettings.searchEngine = engine.id;
+			});
+			
+			// 将创建的菜单项添加到容器中
+			container.appendChild(engineItem);
+		});
+	}
+
+	// 从存储加载设置
 	loadSettings();
 
 	// 安全地监听Chrome存储变化
@@ -561,6 +611,11 @@ async function getFileFromUserImg(fileName) {
 					item.classList.add('active');
 				}
 			});
+		}
+		
+		// 渲染自定义搜索引擎到下拉菜单
+		if (settings.customEngines) {
+			renderCustomEngines();
 		}
 		
 		// 应用主题设置（必须先应用主题，再应用背景）

@@ -1576,6 +1576,20 @@
 				background: rgba(52, 152, 219, 0.3);
 				color: #2980b9;
 			}
+			
+			/* 添加自定义搜索引擎表单样式 */
+			#add-engine-form {
+				transition: all 0.3s ease;
+			}
+			
+			body.dark-mode #add-engine-form {
+				background: rgba(52, 73, 94, 0.5);
+				border-color: #34495e;
+			}
+			
+			body.dark-mode #add-engine-form > div:first-child {
+				color: #ecf0f1;
+			}
 
 		</style>
 	</head>
@@ -1614,38 +1628,24 @@
 					</div>
 					
 					<div class="custom-engine-controls">
-						<div class="engine-actions">
-							<button id="add-current-page-engine" class="save-button" style="width: 48%; margin-right: 4%;">
-								⭐ 添加当前页面
-							</button>
-							<button id="add-engine-btn" class="save-button" style="width: 48%;">
-								➕ 添加搜索引擎
-							</button>
-						</div>
+						<button id="add-engine-btn" class="save-button" style="width: 100%;">
+							➕ 添加搜索引擎
+						</button>
 					</div>
 					
-					<!-- 添加搜索引擎弹窗 -->
-					<div id="add-engine-modal" class="modal" style="display: none;">
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3>添加自定义搜索引擎</h3>
-								<span class="close-modal">&times;</span>
-							</div>
-							<div class="modal-body">
-								<div class="form-group">
-									<label for="engine-name">搜索引擎名称：</label>
-									<input type="text" id="engine-name" placeholder="例如：知乎搜索" maxlength="20">
-								</div>
-								<div class="form-group">
-									<label for="engine-url">搜索URL：</label>
-									<input type="text" id="engine-url" placeholder="例如：https://www.zhihu.com/search?q=%s">
-									<small>使用 %s 作为搜索关键词的占位符</small>
-								</div>
-								<div class="form-group">
-									<label for="engine-homepage">官网地址：</label>
-									<input type="text" id="engine-homepage" placeholder="例如：https://www.zhihu.com">
-								</div>
-								<div class="form-group">
+					<!-- 添加自定义搜索引擎表单 -->
+					<div id="add-engine-form" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+						<div style="font-weight: bold; margin-bottom: 12px; color: #2c3e50; font-size: 12px;">添加自定义搜索引擎</div>
+						<div class="form-group">
+							<label for="engine-name">搜索引擎名称：</label>
+							<input type="text" id="engine-name" placeholder="例如：知乎搜索" maxlength="20" style="width: 210px;">
+						</div>
+						<div class="form-group">
+							<label for="engine-url">搜索URL：</label>
+							<input type="text" id="engine-url" placeholder="例如：https://www.zhihu.com/search?q=%s" style="width: 210px;">
+							<small>使用 %s 作为搜索关键词的占位符</small>
+						</div>
+						<div class="form-group">
 							<label for="engine-icon">图标</label>
 							<div style="display: flex; gap: 10px; align-items: center;">
 								<input type="url" id="engine-icon" placeholder="https://example.com/icon.png" style="flex: 1;">
@@ -1655,11 +1655,9 @@
 								<img id="preview-image" style="max-width: 32px; max-height: 32px;" alt="图标预览">
 							</div>
 						</div>
-							</div>
-							<div class="modal-footer">
-								<button type="button" id="save-engine-btn" class="save-btn">保存</button>
-								<button type="button" id="cancel-engine-btn" class="cancel-btn">取消</button>
-							</div>
+						<div style="display: flex; gap: 10px; margin-top: 15px;">
+							<button type="button" id="save-engine-btn" class="save-btn" style="flex: 1;">保存</button>
+							<button type="button" id="cancel-engine-btn" class="cancel-btn" style="flex: 1;">取消</button>
 						</div>
 					</div>
 				</div>
@@ -2009,6 +2007,14 @@
 				</div>
 			</div>
 
+			<!-- GitHub链接 -->
+			<div style="text-align: center; margin-bottom: 0px; padding: 10px 0;">
+				<a href="https://github.com/suiyuanmingjing/SuiYuan-Search" 
+				   target="_blank" 
+				   style="color: #888; font-size: 8px; text-decoration: none;">
+					GitHub地址
+				</a>
+			</div>
 			<div class="status-message" id="statusMessage"></div>
 		</div>
 		<script src="chrome-api-mock.js"></script>

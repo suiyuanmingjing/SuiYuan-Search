@@ -1854,7 +1854,7 @@ function handleVideoUpload(input) {
 	/**
  * 初始化自定义搜索引擎管理功能
  * 功能：设置自定义搜索引擎相关的事件监听器和UI交互逻辑
- * 包括引擎列表渲染、弹窗管理、图标获取等功能模块
+ * 包括引擎列表渲染、表单管理、图标获取等功能模块
  */
 	function initCustomEngines() {
 		// 渲染当前已保存的自定义搜索引擎列表
@@ -1863,24 +1863,24 @@ function handleVideoUpload(input) {
 		// 添加搜索引擎按钮事件监听
 		const addEngineBtn = document.getElementById('add-engine-btn');
 		if (addEngineBtn) {
-			// 点击按钮时显示添加搜索引擎的弹窗
-			addEngineBtn.addEventListener('click', showAddEngineModal);
+			// 点击按钮时显示或隐藏添加搜索引擎的表单
+			addEngineBtn.addEventListener('click', function() {
+				const form = document.getElementById('add-engine-form');
+				if (form.style.display === 'block') {
+					hideAddEngineForm();
+				} else {
+					showAddEngineForm();
+				}
+			});
 		}
 		
-		// 弹窗相关事件监听器设置
-		const modal = document.getElementById('add-engine-modal');
-		const closeBtn = modal.querySelector('.close-modal');
+		// 表单相关事件监听器设置
 		const cancelBtn = document.getElementById('cancel-engine-btn');
 		const saveBtn = document.getElementById('save-engine-btn');
 		
-		// 关闭按钮：点击关闭弹窗
-		if (closeBtn) {
-			closeBtn.addEventListener('click', hideAddEngineModal);
-		}
-		
-		// 取消按钮：点击关闭弹窗
+		// 取消按钮：点击隐藏表单
 		if (cancelBtn) {
-			cancelBtn.addEventListener('click', hideAddEngineModal);
+			cancelBtn.addEventListener('click', hideAddEngineForm);
 		}
 		
 		// 保存按钮：点击保存自定义搜索引擎
@@ -1891,28 +1891,9 @@ function handleVideoUpload(input) {
 		// 获取图标按钮事件监听
 		const fetchIconBtn = document.getElementById('fetch-icon-btn');
 		if (fetchIconBtn) {
-			// 点击按钮时从官网地址自动获取favicon图标
+			// 点击按钮时从搜索URL自动获取favicon图标
 			fetchIconBtn.addEventListener('click', fetchIconFromUrl);
 		}
-		
-		// 监听官网地址输入框的失焦事件
-		const homepageInput = document.getElementById('engine-homepage');
-		if (homepageInput) {
-			homepageInput.addEventListener('blur', function() {
-				const url = this.value.trim();
-				// 如果输入了官网地址且图标框为空，自动尝试获取图标
-				if (url && !document.getElementById('engine-icon').value.trim()) {
-					autoFetchIcon(url);
-				}
-			});
-		}
-		
-		// 点击弹窗外部区域关闭弹窗
-		modal.addEventListener('click', function(e) {
-			if (e.target === modal) {
-				hideAddEngineModal();
-			}
-		});
 	}
 	
 	/**
@@ -1999,15 +1980,23 @@ function handleVideoUpload(input) {
 		});
 	}
 	
-	// 显示添加搜索引擎弹窗
-	function showAddEngineModal(editMode = false, engineIndex = -1) {
-		const modal = document.getElementById('add-engine-modal');
-		modal.style.display = 'flex';
+	// 显示添加搜索引擎表单
+	function showAddEngineForm(editMode = false, engineIndex = -1) {
+		const form = document.getElementById('add-engine-form');
+		const addBtn = document.getElementById('add-engine-btn');
 		
-		// 设置弹窗标题
-		const modalTitle = modal.querySelector('h3');
-		if (modalTitle) {
-			modalTitle.textContent = editMode ? '编辑自定义搜索引擎' : '添加自定义搜索引擎';
+		// 显示表单
+		form.style.display = 'block';
+		form.style.opacity = '0';
+		form.style.transform = 'translateY(-10px)';
+		
+		// 更新按钮文本
+		addBtn.textContent = '取消添加';
+		
+		// 设置表单标题
+		const formTitle = form.querySelector('h4');
+		if (formTitle) {
+			formTitle.textContent = editMode ? '编辑自定义搜索引擎' : '添加自定义搜索引擎';
 		}
 		
 		// 设置保存按钮文本
@@ -2021,7 +2010,6 @@ function handleVideoUpload(input) {
 			const engine = currentSettings.customEngines[engineIndex];
 			document.getElementById('engine-name').value = engine.name || '';
 			document.getElementById('engine-url').value = engine.url || '';
-			document.getElementById('engine-homepage').value = engine.homepage || '';
 			document.getElementById('engine-icon').value = engine.icon || '';
 			
 			// 显示图标预览
@@ -2033,14 +2021,13 @@ function handleVideoUpload(input) {
 				}
 			}
 			
-			// 保存编辑状态到弹窗元素
-			modal.setAttribute('data-edit-mode', 'true');
-			modal.setAttribute('data-engine-index', engineIndex.toString());
+			// 保存编辑状态到表单元素
+			form.setAttribute('data-edit-mode', 'true');
+			form.setAttribute('data-engine-index', engineIndex.toString());
 		} else {
 			// 清空表单
 			document.getElementById('engine-name').value = '';
 			document.getElementById('engine-url').value = '';
-			document.getElementById('engine-homepage').value = '';
 			document.getElementById('engine-icon').value = '';
 			
 			// 清空图标预览
@@ -2057,30 +2044,59 @@ function handleVideoUpload(input) {
 			}
 			
 			// 清除编辑状态
-			modal.removeAttribute('data-edit-mode');
-			modal.removeAttribute('data-engine-index');
+			form.removeAttribute('data-edit-mode');
+			form.removeAttribute('data-engine-index');
 		}
+		
+		// 触发重排以应用过渡效果
+		form.offsetHeight;
+		
+		// 显示动画
+		form.style.opacity = '1';
+		form.style.transform = 'translateY(0)';
+		
+		// 聚焦到名称输入框
+		setTimeout(() => {
+			document.getElementById('engine-name').focus();
+		}, 300);
 	}
 	
-	// 隐藏添加搜索引擎弹窗
-	function hideAddEngineModal() {
-		const modal = document.getElementById('add-engine-modal');
-		modal.style.display = 'none';
+	// 隐藏添加搜索引擎表单
+	function hideAddEngineForm() {
+		const form = document.getElementById('add-engine-form');
+		const addBtn = document.getElementById('add-engine-btn');
+		
+		// 隐藏动画
+		form.style.opacity = '0';
+		form.style.transform = 'translateY(-10px)';
+		
+		// 更新按钮文本
+		addBtn.textContent = '添加搜索引擎';
+		
+		// 等待动画完成后隐藏
+		setTimeout(() => {
+			form.style.display = 'none';
+		}, 300);
+		
+		// 清空表单
+		document.getElementById('engine-name').value = '';
+		document.getElementById('engine-url').value = '';
+		document.getElementById('engine-icon').value = '';
+		document.getElementById('icon-preview').style.display = 'none';
 		
 		// 清除编辑状态
-		modal.removeAttribute('data-edit-mode');
-		modal.removeAttribute('data-engine-index');
+		form.removeAttribute('data-edit-mode');
+		form.removeAttribute('data-engine-index');
 	}
 	
 	// 保存自定义搜索引擎
 	function saveCustomEngine() {
-		const modal = document.getElementById('add-engine-modal');
-		const isEditMode = modal.getAttribute('data-edit-mode') === 'true';
-		const engineIndex = parseInt(modal.getAttribute('data-engine-index') || '-1');
+		const form = document.getElementById('add-engine-form');
+		const isEditMode = form.getAttribute('data-edit-mode') === 'true';
+		const engineIndex = parseInt(form.getAttribute('data-engine-index') || '-1');
 		
 		const name = document.getElementById('engine-name').value.trim();
 		const url = document.getElementById('engine-url').value.trim();
-		const homepage = document.getElementById('engine-homepage').value.trim();
 		const icon = document.getElementById('engine-icon').value.trim();
 		
 		// 验证必填字段
@@ -2108,22 +2124,12 @@ function handleVideoUpload(input) {
 			return;
 		}
 		
-		// 验证官网地址格式（如果提供）
-		if (homepage) {
-			try {
-				new URL(homepage);
-			} catch (e) {
-				showStatus('官网地址格式不正确', 'error');
-				return;
-			}
-		}
-		
 		// 创建或更新搜索引擎对象
 		const engineData = {
 			id: isEditMode ? currentSettings.customEngines[engineIndex].id : 'custom_' + Date.now(),
 			name: name,
 			url: url,
-			homepage: homepage || url.replace('%s', ''),
+			homepage: url.replace('%s', ''),
 			icon: icon
 		};
 		
@@ -2143,8 +2149,8 @@ function handleVideoUpload(input) {
 		// 重新渲染
 		renderCustomEngines();
 		
-		// 关闭弹窗
-		hideAddEngineModal();
+		// 隐藏表单
+		hideAddEngineForm();
 	}
 	
 	// 编辑自定义搜索引擎
@@ -2152,8 +2158,8 @@ function handleVideoUpload(input) {
 		const engine = currentSettings.customEngines[index];
 		if (!engine) return;
 		
-		// 显示编辑弹窗
-		showAddEngineModal(true, index);
+		// 显示编辑表单
+		showAddEngineForm(true, index);
 	}
 	function deleteCustomEngine(index) {
 		const engine = currentSettings.customEngines[index];
@@ -2186,31 +2192,28 @@ function handleVideoUpload(input) {
 	
 	// 从网址获取图标
 	function fetchIconFromUrl() {
-		const homepageInput = document.getElementById('engine-homepage');
 		const urlInput = document.getElementById('engine-url');
 		const iconInput = document.getElementById('engine-icon');
 		const fetchBtn = document.getElementById('fetch-icon-btn');
 		const preview = document.getElementById('icon-preview');
 		const previewImage = document.getElementById('preview-image');
 		
-		let homepage = homepageInput.value.trim();
 		const url = urlInput.value.trim();
 		
-		// 如果没有官网地址，尝试从搜索URL提取域名
-		if (!homepage && url) {
-			try {
-				const urlObj = new URL(url.replace('%s', 'test'));
-				homepage = urlObj.protocol + '//' + urlObj.hostname;
-				console.log('从搜索URL提取的官网地址:', homepage);
-			} catch (e) {
-				console.error('无法从搜索URL提取域名:', e);
-				showStatus('请输入官网地址或有效的搜索URL', 'error');
-				return;
-			}
+		// 从搜索URL提取域名
+		if (!url) {
+			showStatus('请先输入搜索URL', 'error');
+			return;
 		}
 		
-		if (!homepage) {
-			showStatus('请输入官网地址或有效的搜索URL', 'error');
+		let homepage;
+		try {
+			const urlObj = new URL(url.replace('%s', 'test'));
+			homepage = urlObj.protocol + '//' + urlObj.hostname;
+			console.log('从搜索URL提取的官网地址:', homepage);
+		} catch (e) {
+			console.error('无法从搜索URL提取域名:', e);
+			showStatus('请输入有效的搜索URL', 'error');
 			return;
 		}
 		
