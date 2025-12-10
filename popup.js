@@ -2738,7 +2738,29 @@ function handleVideoUpload(input) {
 			// 获取当前收藏夹数据用于撤销
 			if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
 				chrome.storage.sync.get(['bookmarks'], function(result) {
-					const bookmarks = (result.bookmarks && Array.isArray(result.bookmarks)) ? result.bookmarks : [];
+					let bookmarks = [];
+					
+					// 检查是否有保存的收藏夹数据
+					if (result.bookmarks && Array.isArray(result.bookmarks) && result.bookmarks.length > 0) {
+						bookmarks = result.bookmarks;
+					} else {
+						// 如果没有保存的数据，检查localStorage
+						const savedBookmarks = localStorage.getItem('bookmarks');
+						if (savedBookmarks) {
+							try {
+								const parsed = JSON.parse(savedBookmarks);
+								if (Array.isArray(parsed) && parsed.length > 0) {
+									bookmarks = parsed;
+								}
+							} catch (e) {
+								// 解析失败，使用默认收藏夹
+								bookmarks = defaultBookmarks;
+							}
+						} else {
+							// 既没有Chrome存储也没有localStorage数据，使用默认收藏夹
+							bookmarks = defaultBookmarks;
+						}
+					}
 					
 					// 保存到临时存储用于撤销
 					window.lastClearedBookmarks = bookmarks;
@@ -2763,10 +2785,13 @@ function handleVideoUpload(input) {
 				if (savedBookmarks) {
 					try {
 						const parsed = JSON.parse(savedBookmarks);
-						bookmarks = Array.isArray(parsed) ? parsed : [];
+						bookmarks = Array.isArray(parsed) ? parsed : defaultBookmarks;
 					} catch (e) {
-						bookmarks = [];
+						bookmarks = defaultBookmarks;
 					}
+				} else {
+					// 没有保存的数据，使用默认收藏夹
+					bookmarks = defaultBookmarks;
 				}
 				
 				// 保存到临时存储用于撤销
@@ -2794,11 +2819,72 @@ function handleVideoUpload(input) {
 		if (window.lastClearedBookmarks && Array.isArray(window.lastClearedBookmarks)) {
 			console.log('开始撤销操作，恢复的收藏数据：', window.lastClearedBookmarks);
 			
-			// 直接恢复到localStorage和Chrome存储
-			if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-				chrome.storage.sync.set({ bookmarks: window.lastClearedBookmarks }, function() {
-					console.log('收藏夹已恢复到Chrome存储');
+			// 检查恢复的数据是否为空数组（表示清空的是默认收藏夹）
+			if (window.lastClearedBookmarks.length === 0) {
+				// 如果是空数组，说明清空的是默认收藏夹，需要删除存储的数据以恢复默认
+				if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+					chrome.storage.sync.remove(['bookmarks'], function() {
+						console.log('已删除Chrome存储中的收藏夹数据，将恢复默认收藏夹');
+						localStorage.removeItem('bookmarks');
+						
+						// 重新加载和渲染（会加载默认收藏夹）
+						loadBookmarks();
+						
+						// 清除临时数据
+						window.lastClearedBookmarks = null;
+						
+						// 隐藏撤销按钮
+						const undoBtn = document.getElementById('undo-clear-btn');
+						if (undoBtn) {
+							undoBtn.style.display = 'none';
+						}
+						
+						showStatus('收藏夹已恢复到默认状态', 'success');
+					});
+				} else {
+					// 备用方案：删除localStorage数据
+					localStorage.removeItem('bookmarks');
+					console.log('已删除localStorage中的收藏夹数据，将恢复默认收藏夹');
+					
+					// 重新加载和渲染（会加载默认收藏夹）
+					loadBookmarks();
+					
+					// 清除临时数据
+					window.lastClearedBookmarks = null;
+					
+					// 隐藏撤销按钮
+					const undoBtn = document.getElementById('undo-clear-btn');
+					if (undoBtn) {
+						undoBtn.style.display = 'none';
+					}
+					
+					showStatus('收藏夹已恢复到默认状态', 'success');
+				}
+			} else {
+				// 正常情况：有收藏夹数据需要恢复
+				if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+					chrome.storage.sync.set({ bookmarks: window.lastClearedBookmarks }, function() {
+						console.log('收藏夹已恢复到Chrome存储');
+						localStorage.setItem('bookmarks', JSON.stringify(window.lastClearedBookmarks));
+						
+						// 重新加载和渲染
+						loadBookmarks();
+						
+						// 清除临时数据
+						window.lastClearedBookmarks = null;
+						
+						// 隐藏撤销按钮
+						const undoBtn = document.getElementById('undo-clear-btn');
+						if (undoBtn) {
+							undoBtn.style.display = 'none';
+						}
+						
+						showStatus('收藏夹已恢复', 'success');
+					});
+				} else {
+					// 备用方案：使用localStorage
 					localStorage.setItem('bookmarks', JSON.stringify(window.lastClearedBookmarks));
+					console.log('收藏夹已恢复到localStorage');
 					
 					// 重新加载和渲染
 					loadBookmarks();
@@ -2813,25 +2899,7 @@ function handleVideoUpload(input) {
 					}
 					
 					showStatus('收藏夹已恢复', 'success');
-				});
-			} else {
-				// 备用方案：使用localStorage
-				localStorage.setItem('bookmarks', JSON.stringify(window.lastClearedBookmarks));
-				console.log('收藏夹已恢复到localStorage');
-				
-				// 重新加载和渲染
-				loadBookmarks();
-				
-				// 清除临时数据
-				window.lastClearedBookmarks = null;
-				
-				// 隐藏撤销按钮
-				const undoBtn = document.getElementById('undo-clear-btn');
-				if (undoBtn) {
-					undoBtn.style.display = 'none';
 				}
-				
-				showStatus('收藏夹已恢复', 'success');
 			}
 		} else {
 			console.log('无法撤销操作，lastClearedBookmarks:', window.lastClearedBookmarks);

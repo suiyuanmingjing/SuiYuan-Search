@@ -1483,8 +1483,188 @@ function switchSearchEngine(engine, isTemporary = false) {
 	// 	e.stopPropagation();
 	// });
 	
-	// 添加回车键搜索功能
-	textContent.addEventListener('keydown', function(e) {
+	// 搜索联想相关变量
+	let currentSuggestions = [];
+	let selectedSuggestionIndex = -1;
+	let isSuggestionsVisible = false;
+	const suggestionsContainer = document.querySelector('.search-suggestions');
+	
+	// 搜索建议缓存
+	const suggestionCache = new Map();
+	const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+	
+	// 防抖计时器
+	let debounceTimer = null;
+	const DEBOUNCE_DELAY = 150; // 优化为150毫秒防抖，提高响应速度
+	
+	// 获取搜索建议的函数（优化版，使用本地智能生成和缓存）
+	function getSearchSuggestions(query) {
+		return new Promise((resolve) => {
+			if (!query.trim()) {
+				resolve([]);
+				return;
+			}
+			
+			// 检查缓存
+			const cached = suggestionCache.get(query);
+			if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+				resolve(cached.data);
+				return;
+			}
+			
+			// 使用智能本地生成建议，避免网络延迟
+			const suggestions = generateLocalSuggestions(query);
+			
+			// 缓存结果
+			suggestionCache.set(query, {
+				data: suggestions,
+				timestamp: Date.now()
+			});
+			
+			resolve(suggestions);
+		});
+	}
+	
+	// 智能生成本地搜索建议
+	function generateLocalSuggestions(query) {
+		const commonSuffixes = [
+			'教程', '是什么', '怎么用', '下载', '官网', '在线', '免费',
+			'软件', '工具', '应用', '网站', '资源', '技巧', '方法',
+			'价格', '评测', '对比', '推荐', '最新', '2024', '2025'
+		];
+		
+		const relatedQueries = [
+			query + ' 相关', query + ' 类似', query + ' 替代',
+			'什么是' + query, query + ' 使用方法', query + ' 功能介绍'
+		];
+		
+		// 生成多样化的建议
+		const suggestions = new Set();
+		
+		// 添加基础查询
+		if (query.length > 2) {
+			suggestions.add(query);
+		}
+		
+		// 添加常见后缀组合
+		commonSuffixes.forEach(suffix => {
+			if (suggestions.size < 8) {
+				suggestions.add(query + ' ' + suffix);
+			}
+		});
+		
+		// 添加相关查询
+		relatedQueries.forEach(related => {
+			if (suggestions.size < 8) {
+				suggestions.add(related);
+			}
+		});
+		
+		// 转换为数组并限制数量
+		return Array.from(suggestions).slice(0, 6); // 限制为6个建议，提高性能
+	}
+	
+	// 显示搜索建议（优化渲染性能）
+	function showSuggestions(suggestions) {
+		if (!suggestions || suggestions.length === 0) {
+			hideSuggestions();
+			return;
+		}
+		
+		currentSuggestions = suggestions;
+		selectedSuggestionIndex = -1;
+		
+		// 使用文档片段批量添加DOM元素，减少重绘
+		const fragment = document.createDocumentFragment();
+		
+		// 添加建议项（优化版，去除图标）
+		suggestions.forEach((suggestion, index) => {
+			const item = document.createElement('div');
+			item.className = 'suggestion-item';
+			item.textContent = suggestion;
+			item.dataset.index = index;
+			
+			// 使用事件委托替代单个事件监听器
+			item.addEventListener('click', () => {
+				selectSuggestion(index);
+			});
+			
+			fragment.appendChild(item);
+		});
+		
+		// 清空容器并批量添加
+		suggestionsContainer.innerHTML = '';
+		suggestionsContainer.appendChild(fragment);
+		
+		// 显示容器
+		suggestionsContainer.classList.add('show');
+		isSuggestionsVisible = true;
+	}
+	
+	// 隐藏搜索建议
+	function hideSuggestions() {
+		suggestionsContainer.classList.remove('show');
+		isSuggestionsVisible = false;
+		currentSuggestions = [];
+		selectedSuggestionIndex = -1;
+	}
+	
+	// 选择建议项
+	function selectSuggestion(index) {
+		if (index >= 0 && index < currentSuggestions.length) {
+			textContent.textContent = currentSuggestions[index];
+			hideSuggestions();
+			performSearch();
+		}
+	}
+	
+	// 更新选中的建议项样式（优化性能）
+	function updateSelectedSuggestion() {
+		// 缓存DOM查询结果
+		const suggestionItems = suggestionsContainer.querySelectorAll('.suggestion-item');
+		
+		// 移除所有active类
+		suggestionItems.forEach(item => {
+			item.classList.remove('active');
+		});
+		
+		// 为当前选中项添加active类
+		if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < currentSuggestions.length) {
+			const activeItem = suggestionItems[selectedSuggestionIndex];
+			if (activeItem) {
+				activeItem.classList.add('active');
+				// 滚动到可见区域（优化滚动性能）
+				if (activeItem.offsetTop < suggestionsContainer.scrollTop || 
+				    activeItem.offsetTop + activeItem.offsetHeight > suggestionsContainer.scrollTop + suggestionsContainer.clientHeight) {
+					activeItem.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+				}
+			}
+		}
+	}
+	
+	// 添加输入事件监听（带防抖）
+	textContent.addEventListener('input', function() {
+		const query = textContent.textContent.trim();
+		
+		// 清除之前的计时器
+		if (debounceTimer) {
+			clearTimeout(debounceTimer);
+		}
+		
+		if (!query) {
+			hideSuggestions();
+			return;
+		}
+		
+		// 设置防抖计时器
+		debounceTimer = setTimeout(async () => {
+			const suggestions = await getSearchSuggestions(query);
+			showSuggestions(suggestions);
+		}, DEBOUNCE_DELAY);
+	});
+	
+	// 添加回车键搜索功能和键盘导航
+	textContent.addEventListener('keydown', async function(e) {
 		if (e.key === 'Enter') {
 			// 检查是否按下了Alt键
 			if (e.altKey) {
@@ -1493,11 +1673,44 @@ function switchSearchEngine(engine, isTemporary = false) {
 			} else {
 				// 单独Enter：执行搜索
 				e.preventDefault();
-				// 检查输入框是否为空，如果为空则不进行任何操作
-				if (textContent.textContent.trim() !== '') {
+				// 检查是否有选中的建议
+				if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < currentSuggestions.length) {
+					selectSuggestion(selectedSuggestionIndex);
+				} else if (textContent.textContent.trim() !== '') {
 					performSearch();
+					hideSuggestions();
 				}
 			}
+		} else if (e.key === 'ArrowUp') {
+			// 上箭头：选择上一个建议
+			e.preventDefault();
+			if (isSuggestionsVisible && currentSuggestions.length > 0) {
+				selectedSuggestionIndex = (selectedSuggestionIndex - 1 + currentSuggestions.length) % currentSuggestions.length;
+				updateSelectedSuggestion();
+			}
+		} else if (e.key === 'ArrowDown') {
+			// 下箭头：选择下一个建议
+			e.preventDefault();
+			if (isSuggestionsVisible && currentSuggestions.length > 0) {
+				selectedSuggestionIndex = (selectedSuggestionIndex + 1) % currentSuggestions.length;
+				updateSelectedSuggestion();
+			} else if (!isSuggestionsVisible && textContent.textContent.trim()) {
+				// 如果没有显示建议，按下下箭头时显示
+				const suggestions = await getSearchSuggestions(textContent.textContent.trim());
+				showSuggestions(suggestions);
+				selectedSuggestionIndex = 0;
+				updateSelectedSuggestion();
+			}
+		} else if (e.key === 'Escape') {
+			// Esc键：隐藏建议
+			hideSuggestions();
+		}
+	});
+	
+	// 点击页面其他地方隐藏搜索建议
+	document.addEventListener('click', function(e) {
+		if (!suggestionsContainer.contains(e.target) && e.target !== textContent) {
+			hideSuggestions();
 		}
 	});
 	
@@ -1792,6 +2005,10 @@ function switchSearchEngine(engine, isTemporary = false) {
 	syncThemeToSettings();
 	
 	// 根据窗口宽度设置字体大小
+	// 添加防抖变量
+	let resizeTimeout;
+	let lastFontSize = 32; // 初始字体大小
+	
 	function updateTimeFontSize() {
 		// 如果当前不显示标题，则不执行字体大小调整
 		if (currentSettings.titleDisplay === 'none') {
@@ -1801,20 +2018,38 @@ function switchSearchEngine(engine, isTemporary = false) {
 		const windowWidth = window.innerWidth;
 		let fontSize;
 		
-		// 根据窗口宽度设置字体大小
-		if (windowWidth < 768) {
+		// 根据窗口宽度设置字体大小，与之前媒体查询保持一致
+		if (windowWidth < 480) {
+			// 超小屏幕设备
+			fontSize = 24;
+		} else if (windowWidth < 768) {
 			// 移动设备
-			fontSize = Math.max(24, Math.min(48, windowWidth / 12));
+			fontSize = 28;
 		} else if (windowWidth < 1200) {
 			// 平板设备
-			fontSize = Math.max(32, Math.min(64, windowWidth / 15));
-		} else {
+			fontSize = 32;
+		} else if (windowWidth < 1600) {
 			// 桌面设备
-			fontSize = Math.max(40, Math.min(80, windowWidth / 20));
+			fontSize = 48;
+		} else {
+			// 大屏幕设备
+			fontSize = 64;
 		}
 		
-		// 应用字体大小
-		searchTitle.style.fontSize = `${fontSize}px`;
+		// 只有当字体大小确实发生变化时才更新
+		if (fontSize !== lastFontSize) {
+			// 清除之前的防抖定时器
+			if (resizeTimeout) {
+				clearTimeout(resizeTimeout);
+			}
+			
+			// 设置防抖延迟，确保过渡动画能够完整执行
+			resizeTimeout = setTimeout(() => {
+				searchTitle.style.fontSize = `${fontSize}px`;
+				lastFontSize = fontSize;
+				console.log(`时间字体大小已更新: ${fontSize}px, 窗口宽度: ${windowWidth}px`);
+			}, 100); // 100ms防抖延迟
+		}
 		
 		// 根据是否显示秒数调整更新间隔
 		if (timeUpdateInterval) {
@@ -1822,8 +2057,6 @@ function switchSearchEngine(engine, isTemporary = false) {
 			const updateInterval = currentSettings.showSeconds ? 1000 : 60000; // 显示秒数时每秒更新，否则每分钟更新
 			timeUpdateInterval = setInterval(updateTime, updateInterval);
 		}
-		
-		console.log(`时间字体大小已更新: ${fontSize}px, 窗口宽度: ${windowWidth}px`);
 	}
 	
 	// 获取DOM元素

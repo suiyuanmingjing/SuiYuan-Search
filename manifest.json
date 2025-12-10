@@ -6,11 +6,14 @@
   
   "permissions": [
     "activeTab",  
-    "storage"     
+    "storage",
+    "webRequest"
   ],
   
   "host_permissions": [
-    "file://*/*"  
+    "file://*/*",
+    "https://api.bing.com/*",
+    "https://suggestqueries.google.com/*"
   ],
   
   
