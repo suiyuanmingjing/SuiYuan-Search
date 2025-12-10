@@ -1888,8 +1888,8 @@ function switchSearchEngine(engine, isTemporary = false) {
 			searchTitle.textContent = currentSettings.titleText || 'SuiYuan-Search';
 			searchTitle.style.color = currentSettings.titleFillColor || '#ffffff';
 			searchTitle.style.webkitTextStroke = `1px ${currentSettings.titleOutlineColor || '#000000'}`;
-			// 重置字体大小为默认值
-			searchTitle.style.fontSize = '';
+			// 根据窗口大小设置字体大小，保持与时间模式一致
+			updateTimeFontSize();
 			console.log('已启用标题文字显示模式');
 		} else if (displayMode === 'none') {
 			// 不显示标题模式：隐藏标题元素
