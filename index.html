@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101216">
+<title>随缘搜索</title>
+<link rel="icon" href="img/ico.ico">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bg" id="bg">
+  <div class="bg-image" id="bgImage"></div>
+  <video class="bg-video" id="bgVideo" muted loop playsinline></video>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<main class="stage">
+  <div class="clock-block">
+    <div class="clock" id="clock"><span id="clockH">--</span><span class="colon">:</span><span id="clockM">--</span><span class="colon" id="clockColon2" hidden>:</span><span id="clockS" hidden>--</span><span id="clockSuffix"></span></div>
+    <div class="date" id="date"></div>
+  </div>
+
+  <form class="search" id="searchForm" autocomplete="off">
+    <button type="button" class="engine-btn" id="engineBtn" aria-label="切换搜索引擎" aria-expanded="false">
+      <img id="engineIcon" alt="">
+    </button>
+    <input id="query" type="text" placeholder="搜索" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="搜索">
+    <button type="submit" class="go-btn" aria-label="搜索">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+    </button>
+    <div class="engine-menu" id="engineMenu" hidden></div>
+    <div class="suggestions" id="suggestions" hidden></div>
+  </form>
+</main>
+
+<div class="dock-wrap">
+  <div class="dock" id="dock">
+    <div class="dock-scroll" id="dockScroll"></div>
+    <button type="button" class="dock-item action" id="dockExpand" aria-label="展开全部快捷方式" title="全部快捷方式" hidden>
+      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>
+    </button>
+    <div class="dock-divider"></div>
+    <button type="button" class="dock-item action" data-action="settings" aria-label="设置" title="设置">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84a.48.48 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.48.48 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94L2.86 14.5a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.3.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- 设置 -->
+<div class="settings" id="settings" hidden>
+  <div class="overlay-backdrop" data-close="settings"></div>
+  <section class="settings-panel" role="dialog" aria-modal="true" aria-label="设置" tabindex="-1">
+    <header class="settings-head">
+      <h1>设置</h1>
+      <button class="icon-btn" data-close="settings" aria-label="关闭设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+
+    <nav class="tabs" id="settingsTabs">
+      <button class="tab active" data-tab="search">搜索</button>
+      <button class="tab" data-tab="appearance">外观</button>
+      <button class="tab" data-tab="time">时间</button>
+      <button class="tab" data-tab="bookmarks">收藏夹</button>
+      <button class="tab" data-tab="about">关于</button>
+    </nav>
+
+    <div class="settings-body">
+
+      <div class="panel active" data-panel="search">
+        <div class="group">
+          <div class="group-title">默认搜索引擎</div>
+          <div class="engine-cards" id="engineCards"></div>
+        </div>
+        <div class="group">
+          <div class="row">
+            <div class="row-main"><div class="row-title">搜索历史</div><div class="row-sub">聚焦空搜索框时显示最近搜索</div></div>
+            <button class="switch" id="historyToggle" aria-pressed="true" aria-label="搜索历史"></button>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-head">
+            <div class="group-title">自定义引擎</div>
+            <button class="btn small" id="addEngineBtn">＋ 添加</button>
+          </div>
+          <div class="rows" id="customEngineList"></div>
+        </div>
+      </div>
+
+      <div class="panel" data-panel="appearance">
+        <div class="group">
+          <div class="group-title">主题</div>
+          <div class="chips" id="themeChips">
+            <button data-theme="auto">跟随系统</button>
+            <button data-theme="light">浅色</button>
+            <button data-theme="dark">深色</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">背景类型</div>
+          <div class="chips" id="bgTypes">
+            <button data-type="solid">纯色</button>
+            <button data-type="gradient">渐变</button>
+            <button data-type="image">图片</button>
+            <button data-type="video">视频</button>
+          </div>
+        </div>
+
+        <div class="group" data-bg-panel="solid">
+          <div class="row">
+            <div class="row-main"><div class="row-title">背景颜色</div><div class="row-sub" id="solidHex">#1b2430</div></div>
+            <input type="color" class="color-input" id="solidColor" aria-label="背景颜色">
+          </div>
+        </div>
+
+        <div class="group" data-bg-panel="gradient">
+          <div class="row">
+            <div class="row-main"><div class="row-title">起始颜色</div></div>
+            <input type="color" class="color-input" id="gradientStart" aria-label="起始颜色">
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-title">结束颜色</div></div>
+            <input type="color" class="color-input" id="gradientEnd" aria-label="结束颜色">
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-title">方向</div></div>
+            <select class="select" id="gradientAngle">
+              <option value="135">左上 → 右下</option>
+              <option value="90">左 → 右</option>
+              <option value="180">上 → 下</option>
+              <option value="45">左下 → 右上</option>
+              <option value="225">右上 → 左下</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="group" data-bg-panel="image">
+          <div class="group-head">
+            <div class="group-title">壁纸库</div>
+            <label class="btn small">＋ 添加图片<input type="file" id="imageFile" accept="image/*" multiple hidden></label>
+          </div>
+          <div class="wall-grid" id="wallGrid"></div>
+          <div class="row-sub">单击选用；再次点击或长按可设置缩放中心</div>
+        </div>
+
+        <div class="group bing-daily" data-bg-panel="image">
+          <button type="button" class="wall-item bing-card" id="bingCard" data-wall="bing" aria-label="必应每日壁纸">
+            <img id="bingCardImg" alt="" hidden>
+            <span class="wall-badge">每日</span>
+            <span class="wall-name">必应每日</span>
+          </button>
+          <div class="bing-info">
+            <div>
+              <div class="row-title">必应每日</div>
+              <div class="row-sub" id="bingCopy"></div>
+            </div>
+            <div class="bing-actions">
+              <button class="btn small" id="bingToday">今日</button>
+              <button class="btn small" id="bingShuffle">换一张</button>
+              <button class="btn small" id="bingDownload">下载</button>
+            </div>
+            <div class="row bing-uhd">
+              <div class="row-main"><div class="row-title">4K 画质</div><div class="row-sub">使用 UHD 原图</div></div>
+              <button class="switch" id="bingUhd" aria-pressed="false" aria-label="4K 画质"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="group" data-bg-panel="video">
+          <div class="group-head">
+            <div class="group-title">视频壁纸</div>
+            <label class="btn small">＋ 添加视频<input type="file" id="videoFile" accept="video/*" multiple hidden></label>
+          </div>
+          <div class="wall-grid" id="videoGrid"></div>
+          <div class="row-sub">单击选用，× 删除；4K 视频可能掉帧，建议 1080p</div>
+        </div>
+
+        <div class="group" data-bg-panel="image video">
+          <div class="row"><div class="row-main"><div class="row-title">不透明度</div></div><span class="value" id="opacityVal">100%</span></div>
+          <input type="range" class="range" id="bgOpacity" min="0" max="100" step="1">
+        </div>
+        <div class="group" data-bg-panel="image video">
+          <div class="row"><div class="row-main"><div class="row-title">模糊</div></div><span class="value" id="blurVal">0px</span></div>
+          <input type="range" class="range" id="bgBlur" min="0" max="20" step="1">
+        </div>
+        <div class="group">
+          <div class="row"><div class="row-main"><div class="row-title">暗化遮罩</div><div class="row-sub">让白色文字更清晰</div></div><span class="value" id="scrimVal">18%</span></div>
+          <input type="range" class="range" id="scrimRange" min="0" max="70" step="1">
+        </div>
+        <div class="group">
+          <button class="btn danger" id="resetBackground">重置背景设置</button>
+        </div>
+      </div>
+
+      <div class="panel" data-panel="time">
+        <div class="group">
+          <div class="row">
+            <div class="row-main"><div class="row-title">显示日期</div><div class="row-sub">时钟下方显示年月日与星期</div></div>
+            <button class="switch" id="showDate" aria-pressed="true" aria-label="显示日期"></button>
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-title">24 小时制</div></div>
+            <button class="switch" id="hour24" aria-pressed="true" aria-label="24 小时制"></button>
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-title">显示秒</div></div>
+            <button class="switch" id="showSeconds" aria-pressed="false" aria-label="显示秒"></button>
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-title">冒号闪烁</div><div class="row-sub">每秒闪烁时间分隔符</div></div>
+            <button class="switch" id="blinkColon" aria-pressed="false" aria-label="冒号闪烁"></button>
+          </div>
+          <div class="row">
+            <div class="row-main"><div class="row-title">字重</div><div class="row-sub">数字的粗细</div></div>
+            <div class="chips" id="weightChips">
+              <button data-weight="200">细</button>
+              <button data-weight="400">常规</button>
+              <button data-weight="600">粗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" data-panel="bookmarks">
+        <div class="group">
+          <div class="group-head">
+            <div class="group-title">Dock 图标</div>
+            <button class="btn small" id="addBmBtn">＋ 添加</button>
+          </div>
+          <div class="rows" id="bmList"></div>
+          <div class="row-actions end">
+            <button class="btn small ghost" id="exportBmBtn">导出 JSON</button>
+            <label class="btn small ghost">导入 JSON<input type="file" id="importBmFile" accept=".json,application/json" hidden></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" data-panel="about">
+        <div class="group">
+          <div class="row"><div class="row-main"><div class="row-title">随缘搜索</div><div class="row-sub">简洁的起始页 · 本地运行，不上传数据</div></div><span class="value">3.0.0</span></div>
+          <div class="row"><div class="row-main"><div class="row-title">快捷键</div><div class="row-sub">/ 或 Ctrl+K 聚焦 · Ctrl+1~9 切换引擎 · Esc 关闭</div></div></div>
+          <div class="row"><div class="row-main"><div class="row-title">数据存储</div><div class="row-sub">设置存于浏览器本地；图片视频存于 IndexedDB</div></div></div>
+        </div>
+        <div class="group">
+          <div class="group-head"><div class="group-title">配置备份</div></div>
+          <label class="row-sub" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="exportMedia"> 包含图片 / 视频文件（体积较大）
+          </label>
+          <div class="row-actions">
+            <button class="btn small" id="exportConfig">导出配置</button>
+            <label class="btn small ghost">导入配置<input type="file" id="importConfigFile" accept="application/json,.json" hidden></label>
+          </div>
+          <div class="row-sub">包含设置、收藏夹与搜索历史（不含图片/视频文件）</div>
+        </div>
+
+        <div class="group">
+          <button class="btn danger" id="resetAll">恢复默认设置</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- 引擎编辑 -->
+<div class="modal" id="engineModal" hidden>
+  <div class="overlay-backdrop" data-close="engineModal"></div>
+  <div class="modal-card">
+    <h2 id="engineModalTitle">添加引擎</h2>
+    <label class="field"><span>名称</span><input id="engName" maxlength="20" placeholder="例如：知乎"></label>
+    <label class="field"><span>搜索 URL</span><input id="engUrl" placeholder="https://www.zhihu.com/search?q=%s"></label>
+    <label class="field"><span>图标地址（可选）</span><input id="engIcon" placeholder="留空自动获取"></label>
+    <div class="modal-actions">
+      <button class="btn ghost" data-close="engineModal">取消</button>
+      <button class="btn primary" id="engSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 收藏编辑 -->
+<div class="modal" id="bmModal" hidden>
+  <div class="overlay-backdrop" data-close="bmModal"></div>
+  <div class="modal-card">
+    <h2 id="bmModalTitle">添加收藏</h2>
+    <label class="field"><span>名称</span><input id="bmTitle" maxlength="30" placeholder="例如：GitHub"></label>
+    <label class="field"><span>网址</span><input id="bmUrl" placeholder="https://github.com"></label>
+    <label class="field"><span>图标地址（可选）</span><input id="bmIcon" placeholder="留空自动获取"></label>
+    <div class="modal-actions">
+      <button class="btn ghost" data-close="bmModal">取消</button>
+      <button class="btn primary" id="bmSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 缩放中心 -->
+<div class="modal" id="focalModal" hidden>
+  <div class="overlay-backdrop" data-close="focalModal"></div>
+  <div class="modal-card wide">
+    <h2>设置缩放中心</h2>
+    <div class="focal-stage" id="focalStage"><span class="focal-dot" id="focalDot"></span></div>
+    <div class="row-sub">在图上点一个点，裁剪缩放会固定在该点周围</div>
+    <div class="modal-actions">
+      <button class="btn ghost" data-close="focalModal">取消</button>
+      <button class="btn primary" id="focalSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 全部快捷方式 -->
+<div class="modal" id="moreModal" hidden>
+  <div class="overlay-backdrop" data-close="moreModal"></div>
+  <div class="modal-card wide">
+    <h2>全部快捷方式</h2>
+    <div class="more-grid" id="moreGrid"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" data-close="moreModal">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script src="local-storage.js" defer></script>
+<script src="js/core.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>

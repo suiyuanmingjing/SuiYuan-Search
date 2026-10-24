@@ -1,0 +1,15 @@
+# 旧实现归档，不进入新仓库
+legacy/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# 依赖与构建产物（本项目零构建，仅作兜底）
+node_modules/
+dist/
+dist-web/
+*.log
