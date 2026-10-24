@@ -27,6 +27,5 @@
   },
   "chrome_url_overrides": {
     "newtab": "index.html"
-  },
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuzltVQ88AoKdKRvcqTUg1ORkFkc+IMdszEoVupf+Fdrz8xPo9rR+n1FbN5JivuV5dnaVMm2ZHZh/m89wNYAtpgTrv2QLJT7a1DAXbi6xbyoAV3jdD2WvaDwuBBPnBJqOBPC9o8rxmR8C9JNs8vSqKrMPTky2jpQ9BjWVrFuX3yg8LKLso1QAiTDAN4ctCDikEW3MqlOiGSrNR+pH3AGcsL9LkemNlcrKR8LoH5EnYxLCdtZWkL+iVHp3sxspGVOBbUaqrBCh33lUG2IND4wrGPR7DnG8XDAC7RJ7Pn5pmrb0PEbR6l4SctHzebfW36I03BiloanBGo1xfg7y1xPZ3QIDAQAB"
+  }
 }
