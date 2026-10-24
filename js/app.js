@@ -7,7 +7,7 @@
 
   var settings, bookmarks;
   var videoUrls = {};
-  var sugList = [], sugIndex = -1, sugTimer = null, sugAbort = null, sugSeq = 0;
+  var sugList = [], sugIndex = -1, sugTimer = null, sugAbort = null, sugSeq = 0, sugCache = {};
   var editEngineIndex = -1, editBookmarkIndex = -1;
   var mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   var IS_EXTENSION = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id;
@@ -433,6 +433,7 @@
     if (sugAbort) { try { sugAbort.abort(); } catch (e) {} sugAbort = null; }
     if (!q) { showHistory(); return; }
     hideSuggestions();
+    if (sugCache[q]) showSuggestions(sugCache[q].slice(0, 8));
     sugTimer = setTimeout(function () { fetchSuggestions(q); }, 120);
   }
 
@@ -448,49 +449,52 @@
   }
 
   function fetchSuggestions(q) {
-    var seq = ++sugSeq;
-    var done = false;
+    var key = String(q || '').trim();
+    if (!key) { hideSuggestions(); return; }
 
-    function deliver(list) {
-      if (done || seq !== sugSeq) return;
-      var out = dedupe(list);
-      if (!out.length) return;
-      done = true;
-      showSuggestions(out.slice(0, 8));
+    var seq = ++sugSeq;
+    var shown = false;
+    var merged = [];
+
+    function accept(list) {
+      if (seq !== sugSeq || !Array.isArray(list) || !list.length) return;
+      merged = dedupe(merged.concat(list));
+      if (!merged.length) return;
+      shown = true;
+      if (merged.length >= 4) {
+        sugCache[key] = merged.slice(0, 12);
+        if (Object.keys(sugCache).length > 60) sugCache = {};
+      }
+      showSuggestions(merged.slice(0, 8));
     }
 
-    // 网页版可用：百度联想走 JSONP，不依赖 CORS（扩展的 CSP 不允许外链脚本，故跳过）
-    if (!IS_EXTENSION) jsonpSuggestions(q, function (list) { deliver(list); });
+    // 命中缓存立即出词，再让网络结果继续补全
+    if (sugCache[key]) accept(sugCache[key]);
 
-    // 扩展内可用：Bing + Google 聚合
+    // 网页版：百度 JSONP
+    if (!IS_EXTENSION) jsonpSuggestions(key, accept);
+
     if (sugAbort) { try { sugAbort.abort(); } catch (e) {} }
     sugAbort = new AbortController();
-    var timer = setTimeout(function () { try { sugAbort.abort(); } catch (e) {} }, 2200);
-    var tasks = [
-      fetchJson('https://api.bing.com/osjson.aspx?query=' + encodeURIComponent(q) + '&mkt=zh-CN', sugAbort.signal),
-      fetchJson('https://suggestqueries.google.com/complete/search?client=firefox&q=' + encodeURIComponent(q), sugAbort.signal),
-      fetchBaiduSuggest(q, sugAbort.signal)
-    ];
-    Promise.allSettled(tasks).then(function (results) {
-      clearTimeout(timer);
-      if (seq !== sugSeq) return;
-      var merged = [];
-      results.forEach(function (r) {
-        if (r.status !== 'fulfilled') return;
-        var data = r.value;
-        if (Array.isArray(data) && Array.isArray(data[1])) merged = merged.concat(data[1]);
-        else if (Array.isArray(data)) merged = merged.concat(data);
-      });
-      deliver(merged);
-    });
+    var signal = sugAbort.signal;
+    setTimeout(function () { try { sugAbort.abort(); } catch (e) {} }, 1800);
 
-    // 都失败时退回本地生成，避免空白
+    // 谁先回谁先显示，不再等最慢的一路
+    fetchJson('https://api.bing.com/osjson.aspx?query=' + encodeURIComponent(key) + '&mkt=zh-CN', signal)
+      .then(function (data) { if (Array.isArray(data) && Array.isArray(data[1])) accept(data[1]); })
+      .catch(function () {});
+    fetchJson('https://suggestqueries.google.com/complete/search?client=firefox&q=' + encodeURIComponent(key), signal)
+      .then(function (data) { if (Array.isArray(data) && Array.isArray(data[1])) accept(data[1]); })
+      .catch(function () {});
+    fetchBaiduSuggest(key, signal).then(accept).catch(function () {});
+
+    // 全部失败才用本地兜底
     setTimeout(function () {
-      if (!done && seq === sugSeq) {
-        done = true;
-        showSuggestions(localSuggestions(q));
+      if (seq === sugSeq && !shown) {
+        shown = true;
+        showSuggestions(localSuggestions(key));
       }
-    }, 3000);
+    }, 2200);
   }
 
   function fetchBaiduSuggest(q, signal) {
