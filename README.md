@@ -61,3 +61,13 @@ legacy/             旧版实现（Vue 版与更早的原生版），不参与�
 ## 许可
 
 见 LICENSE。
+
+## 打包与固定 ID
+
+- 扩展 ID：`janbbphanhlcpdjplcgoabgggdahjjhc`
+- 私钥：`keys/suiyuan-search.pem`（仅本地保留，勿公开；丢失后无法用同一 ID 更新）
+- 解压加载：`manifest.json` 已写入 `key`，在任何机器加载，扩展 ID 都相同
+- 安装包：`release/SuiYuan-Search-2.0.0.crx`、`release/SuiYuan-Search-2.0.0.zip`
+- 重新打包：`msedge.exe --pack-extension=build/pkg --pack-extension-key=keys/suiyuan-search.pem`
+
+> Edge / Chrome 默认只允许商店来源的 CRX，非商店 CRX 需要开发者模式或企业策略。日常使用直接「加载解压缩的扩展」即可，ID 同样固定；上架商店用 zip 包。

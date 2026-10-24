@@ -13,3 +13,9 @@ node_modules/
 dist/
 dist-web/
 *.log
+
+# 扩展签名私钥（固定 ID 用，切勿公开）
+keys/
+*.pem
+release/
+build/
