@@ -921,3 +921,14 @@ html.dark body.video-bg .suggestions {
   #moreModal { padding-bottom: 4vh; }
   #moreModal .modal-card { max-height: 68vh; }
 }
+
+.about-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  word-break: break-all;
+  max-width: 60%;
+  text-align: right;
+}
+.about-link:hover { opacity: 0.7; }
