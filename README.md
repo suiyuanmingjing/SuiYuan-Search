@@ -2,6 +2,17 @@
 
 一个简洁的浏览器起始页：大时钟、胶囊搜索、底部 Dock、壁纸背景。纯静态实现，既能当网页打开，也能直接作为 Chrome / Edge 扩展加载。
 
+## 截图
+
+<p align="center"><img src="docs/screenshots/release/01-home.jpg" width="820" alt="首页"></p>
+
+<p align="center"><img src="docs/screenshots/release/02-settings.jpg" width="820" alt="外观设置"></p>
+
+<p align="center">
+  <img src="docs/screenshots/release/03-focal.jpg" width="62%" alt="缩放中心">
+  <img src="docs/screenshots/release/04-mobile.jpg" width="24%" alt="移动端">
+</p>
+
 ## 使用
 
 ### 当网页用
