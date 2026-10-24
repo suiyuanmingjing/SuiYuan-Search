@@ -466,18 +466,23 @@
     if (sugAbort) { try { sugAbort.abort(); } catch (e) {} }
     sugAbort = new AbortController();
     var timer = setTimeout(function () { try { sugAbort.abort(); } catch (e) {} }, 2200);
-    Promise.all([
-      fetchJson('https://api.bing.com/osjson.aspx?query=' + encodeURIComponent(q), sugAbort.signal),
-      fetchJson('https://suggestqueries.google.com/complete/search?client=firefox&q=' + encodeURIComponent(q), sugAbort.signal)
-    ]).then(function (res) {
+    var tasks = [
+      fetchJson('https://api.bing.com/osjson.aspx?query=' + encodeURIComponent(q) + '&mkt=zh-CN', sugAbort.signal),
+      fetchJson('https://suggestqueries.google.com/complete/search?client=firefox&q=' + encodeURIComponent(q), sugAbort.signal),
+      fetchBaiduSuggest(q, sugAbort.signal)
+    ];
+    Promise.allSettled(tasks).then(function (results) {
       clearTimeout(timer);
       if (seq !== sugSeq) return;
       var merged = [];
-      res.forEach(function (data) {
+      results.forEach(function (r) {
+        if (r.status !== 'fulfilled') return;
+        var data = r.value;
         if (Array.isArray(data) && Array.isArray(data[1])) merged = merged.concat(data[1]);
+        else if (Array.isArray(data)) merged = merged.concat(data);
       });
       deliver(merged);
-    }).catch(function () { clearTimeout(timer); });
+    });
 
     // 都失败时退回本地生成，避免空白
     setTimeout(function () {
@@ -486,6 +491,19 @@
         showSuggestions(localSuggestions(q));
       }
     }, 3000);
+  }
+
+  function fetchBaiduSuggest(q, signal) {
+    return fetch('https://suggestion.baidu.com/su?wd=' + encodeURIComponent(q) + '&ie=utf-8', {
+      signal: signal,
+      credentials: 'omit'
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    }).then(function (text) {
+      var m = text.match(/s:(\[[^\]]*\])/);
+      return m ? JSON.parse(m[1]) : [];
+    });
   }
 
   function jsonpSuggestions(q, cb) {
