@@ -3,6 +3,8 @@
 ## 文件
 - `store-icon-300.png`：商店图标 300×300
 - `screenshots/01-home.png`、`02-settings.png`、`03-focal.png`：1280×800
+- `promo-440x280.png`：小型展示图 440×280
+- `promo-1400x560.png`：大型展示图 1400×560
 - `listing-zh.md` / `listing-en.md`：商店文案
 - `privacy.md`：隐私政策
 - 安装包：`dist/SuiYuan-Search-2.1.0-edge.zip`
