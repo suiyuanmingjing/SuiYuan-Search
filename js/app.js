@@ -1515,7 +1515,7 @@
     });
 
     $('resetAll').addEventListener('click', function () {
-      if (!confirm('恢复默认设置？收藏夹不会被删除。')) return;
+      askConfirm('恢复默认设置？收藏夹不会被删除。', function () {
       settings = SY.clone(SY.DEFAULT_SETTINGS);
       wpUrls = {};
       videoUrls = {};
@@ -1525,6 +1525,7 @@
       syncSettingsUI();
       saveNow();
       toast('已恢复默认');
+      });
     });
 
     el.bgVideo.addEventListener('error', function () {
