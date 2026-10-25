@@ -705,8 +705,7 @@
         '</button>';
     }).join('') || '<div class="empty" style="grid-column:1/-1">还没有收藏</div>';
     attachIconFallbacks(grid);
-    var rows = Math.min(7, Math.max(5, Math.ceil(bookmarks.length / 5)));
-    grid.style.height = (rows * 78 + (rows - 1) * 12) + 'px';
+    layoutDockPanel();
     requestAnimationFrame(function () {
       Array.prototype.forEach.call(grid.querySelectorAll('.more-name'), function (el) {
         var inner = el.firstElementChild;
@@ -720,10 +719,25 @@
     });
   }
 
+  function layoutDockPanel() {
+    var grid = $('dockPanelGrid');
+    if (!grid || $('dockPanel').hidden) return;
+    var small = window.innerHeight < 640;
+    var gap = small ? 8 : 12, minW = small ? 64 : 84;
+    var row = small ? 52 : 78;
+    var cols = Math.floor((grid.clientWidth + gap) / (minW + gap));
+    cols = Math.max(5, Math.min(7, cols));
+    grid.style.setProperty('--cols', cols);
+    grid.style.setProperty('--row', row + 'px');
+    grid.style.setProperty('--gap', gap + 'px');
+    grid.style.height = (5 * row + 4 * gap) + 'px';
+  }
+
   function openDockPanel() {
     el.form.hidden = true;
     $('dockPanel').hidden = false;
     renderDockPanel();
+    requestAnimationFrame(layoutDockPanel);
   }
 
   function closeDockPanel() {
@@ -1260,6 +1274,10 @@
       e.stopPropagation();
       if ($('dockPanel').hidden) openDockPanel();
       else closeDockPanel();
+    });
+
+    window.addEventListener('resize', function () {
+      if (!$('dockPanel').hidden) layoutDockPanel();
     });
 
     $('dockPanelGrid').addEventListener('click', function (e) {
