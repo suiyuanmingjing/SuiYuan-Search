@@ -693,6 +693,42 @@
     });
   }
 
+  function renderDockPanel() {
+    var grid = $('dockPanelGrid');
+    grid.innerHTML = bookmarks.map(function (b) {
+      var icon = b.icon || SY.faviconFor(b.url);
+      return '<button type="button" class="more-item" data-url="' + esc(b.url) + '" title="' + esc(b.title) + '">' +
+        '<span class="more-icon">' +
+        (icon ? '<img src="' + esc(icon) + '" data-host="' + esc(SY.hostOf(b.url)) + '" alt="">' : '<span class="letter">' + esc(firstChar(b.title)) + '</span>') +
+        '</span>' +
+        '<span class="more-name"><span>' + esc(b.title) + '</span></span>' +
+        '</button>';
+    }).join('') || '<div class="empty" style="grid-column:1/-1">还没有收藏</div>';
+    attachIconFallbacks(grid);
+    requestAnimationFrame(function () {
+      Array.prototype.forEach.call(grid.querySelectorAll('.more-name'), function (el) {
+        var inner = el.firstElementChild;
+        if (!inner) return;
+        var over = inner.scrollWidth - el.clientWidth;
+        if (over > 2) {
+          el.classList.add('marquee');
+          el.style.setProperty('--shift', (-over) + 'px');
+        }
+      });
+    });
+  }
+
+  function openDockPanel() {
+    renderDockPanel();
+    el.form.hidden = true;
+    $('dockPanel').hidden = false;
+  }
+
+  function closeDockPanel() {
+    $('dockPanel').hidden = true;
+    el.form.hidden = false;
+  }
+
   function openMoreModal() {
     var grid = $('moreGrid');
     grid.innerHTML = bookmarks.map(function (b) {
@@ -1220,7 +1256,23 @@
 
     el.dockExpand.addEventListener('click', function (e) {
       e.stopPropagation();
-      openMoreModal();
+      if ($('dockPanel').hidden) openDockPanel();
+      else closeDockPanel();
+    });
+
+    $('dockPanelGrid').addEventListener('click', function (e) {
+      var item = e.target.closest('[data-url]');
+      if (item) location.href = item.getAttribute('data-url');
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!$('dockPanel').hidden && !e.target.closest('#dockPanel') && !e.target.closest('#dockExpand')) {
+        closeDockPanel();
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !$('dockPanel').hidden) closeDockPanel();
     });
 
     $('confirmOk').addEventListener('click', function () {
