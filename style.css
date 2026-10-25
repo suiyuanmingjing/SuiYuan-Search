@@ -397,7 +397,7 @@ html.dark .overlay-backdrop { background: rgba(0, 0, 0, 0.5); }
 .settings-panel {
   position: relative;
   outline: none;
-  width: min(860px, calc(100vw - 48px));
+  width: min(860px, 100%);
   height: 72vh;
   max-width: calc(100vw - 48px);
   max-height: calc(100vh - 48px);
@@ -446,7 +446,7 @@ html.dark .overlay-backdrop { background: rgba(0, 0, 0, 0.5); }
 .tab:hover { color: var(--fg); background: var(--item-hover); }
 .tab.active { background: var(--tile-bg); color: var(--fg); }
 
-.settings-body { padding: 8px 24px 28px; overflow-y: auto; flex: 1; }
+.settings-body { padding: 8px 24px 28px; overflow-y: auto; flex: 1; scrollbar-gutter: stable; }
 .panel { display: none; }
 .panel.active { display: block; }
 
@@ -730,7 +730,7 @@ html.dark .btn.danger { color: #ff9d92; border-color: rgba(255, 157, 146, 0.35);
   .dock-wrap { padding: 0 12px; }
   .dock { max-width: calc(100vw - 24px); }
   .settings { padding: 0; }
-  .settings-panel { width: calc(100vw - 28px); height: 72vh; max-height: calc(100dvh - 32px); border-radius: 18px; border: 1px solid var(--panel-border); }
+  .settings-panel { width: calc(100% - 24px); height: 72vh; max-height: calc(100dvh - 32px); border-radius: 18px; border: 1px solid var(--panel-border); }
   .settings-body { padding: 4px 16px 28px; }
   .tabs { padding: 10px 12px 0; }
   .modal { padding: 16px; }
@@ -934,3 +934,5 @@ video::-webkit-media-controls-overlay-play-button {
   display: none !important;
   -webkit-appearance: none !important;
 }
+
+.confirm-text { margin: 0 0 18px; color: var(--fg-2); font-size: 14px; line-height: 1.7; }

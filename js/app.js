@@ -576,9 +576,34 @@
 
   function updateDockOverflow() {
     if (!el.dockScroll) return;
-    var overflow = el.dockScroll.scrollWidth > el.dockScroll.clientWidth + 4;
-    el.dockExpand.hidden = !overflow;
-    el.dock.classList.toggle('has-overflow', overflow);
+    var items = Array.prototype.slice.call(el.dockScroll.children);
+    items.forEach(function (it) { it.style.display = ''; });
+    el.dockExpand.hidden = true;
+
+    var style = getComputedStyle(el.dockScroll);
+    var gap = parseFloat(style.columnGap || style.gap || '12') || 12;
+
+    function fitCount(avail) {
+      var total = 0, fit = 0;
+      items.forEach(function (it) {
+        var w = it.getBoundingClientRect().width;
+        var need = total + (fit ? gap : 0) + w;
+        if (need <= avail + 1) { total = need; fit++; }
+      });
+      return fit;
+    }
+
+    var fit = fitCount(el.dockScroll.clientWidth);
+    if (fit >= items.length) {
+      el.dockExpand.hidden = true;
+      el.dock.classList.remove('has-overflow');
+      return;
+    }
+
+    el.dockExpand.hidden = false;
+    el.dock.classList.add('has-overflow');
+    fit = fitCount(el.dockScroll.clientWidth);
+    items.forEach(function (it, i) { if (i >= fit) it.style.display = 'none'; });
   }
 
   function firstChar(s) {
@@ -1117,6 +1142,13 @@
       openMoreModal();
     });
 
+    $('confirmOk').addEventListener('click', function () {
+      var cb = confirmCallback;
+      confirmCallback = null;
+      closeModal('confirmModal');
+      if (cb) cb();
+    });
+
     $('moreGrid').addEventListener('click', function (e) {
       var item = e.target.closest('[data-url]');
       if (item) location.href = item.getAttribute('data-url');
@@ -1153,13 +1185,14 @@
       if (edit) { openEngineModal(parseInt(edit.getAttribute('data-edit-engine'), 10)); return; }
       if (del) {
         var i = parseInt(del.getAttribute('data-del-engine'), 10);
-        if (!confirm('删除这个引擎？')) return;
-        settings.customEngines.splice(i, 1);
+        askConfirm('删除这个引擎？', function () {
+          settings.customEngines.splice(i, 1);
         if (settings.engine.indexOf('custom_') === 0) settings.engine = 'bing';
         saveNow();
         renderEngineButton();
         syncSettingsUI();
         toast('已删除');
+        });
       }
     });
 
@@ -1438,12 +1471,13 @@
       if (edit) { openBookmarkModal(parseInt(edit.getAttribute('data-edit-bm'), 10)); return; }
       if (del) {
         var k = parseInt(del.getAttribute('data-del-bm'), 10);
-        if (!confirm('删除这条收藏？')) return;
-        bookmarks.splice(k, 1);
+        askConfirm('删除这条收藏？', function () {
+          bookmarks.splice(k, 1);
         saveBookmarks();
         renderDock();
         renderBookmarkList();
         toast('已删除');
+        });
       }
     });
 
@@ -1514,7 +1548,18 @@
 
     // 初次聚焦（桌面端，可在设置中关闭）
     if (settings.openFocus !== false && (!window.matchMedia || !window.matchMedia('(pointer: coarse)').matches)) {
-      setTimeout(function () { el.query.focus(); }, 60);
+      var focusTries = 0;
+      var tryFocus = function () {
+        focusTries++;
+        try { window.focus(); } catch (e) {}
+        try { el.query.focus({ preventScroll: true }); } catch (e) {}
+        if (document.activeElement !== el.query && focusTries < 10) setTimeout(tryFocus, 120);
+      };
+      setTimeout(tryFocus, 80);
+      window.addEventListener('load', function () { setTimeout(tryFocus, 60); });
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) setTimeout(tryFocus, 80);
+      });
     }
   }
 
@@ -1673,8 +1718,11 @@
   }
 
   function deleteWallpaper(id) {
+    askConfirm('删除这张壁纸？', function () { doDeleteWallpaper(id); });
+  }
+
+  function doDeleteWallpaper(id) {
     var b = settings.background;
-    if (!confirm('删除这张壁纸？')) return;
     b.wallpapers = b.wallpapers.filter(function (w) { return w.id !== id; });
     wallGridDirty = true;
     delete wpUrls[id];
@@ -1807,7 +1855,13 @@
 
   function deleteVideo(id) {
     var b = settings.background;
-    if (!confirm('删除这个视频壁纸？')) return;
+    var target = b.videos.filter(function (v) { return v.id === id; })[0];
+    if (target && target.kind === 'builtin') { toast('默认视频不可删除'); return; }
+    askConfirm('删除这个视频壁纸？', function () { doDeleteVideo(id); });
+  }
+
+  function doDeleteVideo(id) {
+    var b = settings.background;
     b.videos = b.videos.filter(function (v) { return v.id !== id; });
     videoGridDirty = true;
     delete videoUrls[id];
@@ -2081,6 +2135,14 @@
 
   /* ---------------- 工具 ---------------- */
   function esc(s) { return SY.escapeHtml(s); }
+
+  var confirmCallback = null;
+
+  function askConfirm(text, onOk) {
+    $('confirmText').textContent = text;
+    confirmCallback = onOk;
+    openModal('confirmModal');
+  }
 
   function toast(message) {
     el.toast.textContent = message;
