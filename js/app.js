@@ -149,7 +149,7 @@
       probeBuiltin.onerror = function () {
         toast('内置壁纸加载失败：请确认 img 目录与 index.html 在同一文件夹');
       };
-      probeBuiltin.src = 'img/亮色.jpg';
+      probeBuiltin.src = 'img/wallpaper-1.jpg';
     }).catch(function (err) {
       console.error('[随缘搜索] 初始化失败', err);
     });
@@ -262,7 +262,7 @@
     }
 
     var wp = currentWallpaper();
-    var builtin = (resolvedTheme() === 'dark' ? 'img/暗色.jpg' : 'img/亮色.jpg');
+    var builtin = 'img/wallpaper-1.jpg';
     var imgUrl = wallpaperUrl(wp) || builtin;
     var focal = (wp && wp.focal) || { x: 0.5, y: 0.5 };
     var opNum = (typeof b.opacity === 'number' && isFinite(b.opacity)) ? b.opacity : 100;
