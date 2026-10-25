@@ -561,7 +561,7 @@
 
   /* ---------------- Dock ---------------- */
   function renderDock() {
-    var html = bookmarks.map(function (b) {
+    var html = bookmarks.slice(0, 10).map(function (b) {
       var icon = b.icon || SY.faviconFor(b.url);
       var inner = icon
         ? '<img src="' + esc(icon) + '" data-host="' + esc(SY.hostOf(b.url)) + '" alt="">'
@@ -594,7 +594,8 @@
     }
 
     var fit = fitCount(el.dockScroll.clientWidth);
-    if (fit >= items.length) {
+    var needsExpand = fit < items.length || bookmarks.length > 10;
+    if (!needsExpand) {
       el.dockExpand.hidden = true;
       el.dock.classList.remove('has-overflow');
       return;
