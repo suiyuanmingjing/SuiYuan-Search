@@ -54,7 +54,6 @@
     history: true,
     language: 'auto',
     openFocus: true,
-    dockPosition: 'bottom',
     clock: { showDate: true, hour24: true, showSeconds: false, blinkColon: false, weight: 200 },
     scrim: 18
   };

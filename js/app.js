@@ -99,7 +99,6 @@
       bindEvents();
 
       applyLanguage();
-      applyDockPosition();
 
       // 进入时轻量探测必应网络，失败用气泡提示（不弹浏览器对话框）
       (function () {
@@ -859,7 +858,6 @@
     $('historyToggle').setAttribute('aria-pressed', settings.history ? 'true' : 'false');
     if ($('languageSelect')) $('languageSelect').value = settings.language || 'auto';
     $('openFocusToggle').setAttribute('aria-pressed', settings.openFocus !== false ? 'true' : 'false');
-    applyDockPosition();
 
     renderBookmarkList();
   }
@@ -928,13 +926,6 @@
     });
   }
 
-  function applyDockPosition() {
-    var top = settings.dockPosition === 'top';
-    document.body.classList.toggle('dock-top', top);
-    var btn = $('dockTopBtn');
-    if (btn) btn.textContent = top ? '移到底部' : '移至顶部';
-  }
-
   function renderBookmarkList() {
     var wrap = $('bmList');
     if (!bookmarks.length) {
@@ -948,6 +939,7 @@
         '<div class="list-actions">' +
         '<button type="button" class="mini" data-move-bm="' + i + '" data-dir="-1" title="上移"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
         '<button type="button" class="mini" data-move-bm="' + i + '" data-dir="1" title="下移"' + (i === bookmarks.length - 1 ? ' disabled' : '') + '>↓</button>' +
+        '<button type="button" class="mini" data-top-bm="' + i + '" title="移至顶部"' + (i === 0 ? ' disabled' : '') + '>⤒</button>' +
         '<button type="button" class="mini" data-edit-bm="' + i + '" title="编辑">✎</button>' +
         '<button type="button" class="mini danger" data-del-bm="' + i + '" title="删除">✕</button>' +
         '</div></div>';
@@ -1619,6 +1611,19 @@
       var move = e.target.closest('[data-move-bm]');
       var edit = e.target.closest('[data-edit-bm]');
       var del = e.target.closest('[data-del-bm]');
+      var topBtn = e.target.closest('[data-top-bm]');
+      if (topBtn) {
+        var ti = parseInt(topBtn.getAttribute('data-top-bm'), 10);
+        if (ti > 0 && ti < bookmarks.length) {
+          var item = bookmarks.splice(ti, 1)[0];
+          bookmarks.unshift(item);
+          saveBookmarks();
+          renderDock();
+          renderBookmarkList();
+          toast('已移至顶部');
+        }
+        return;
+      }
       if (move) {
         var i = parseInt(move.getAttribute('data-move-bm'), 10);
         var dir = parseInt(move.getAttribute('data-dir'), 10);
@@ -1641,12 +1646,6 @@
         toast('已删除');
         });
       }
-    });
-
-    $('dockTopBtn').addEventListener('click', function () {
-      settings.dockPosition = settings.dockPosition === 'top' ? 'bottom' : 'top';
-      applyDockPosition();
-      saveNow();
     });
 
     $('clearBmBtn').addEventListener('click', function () {
