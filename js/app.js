@@ -705,6 +705,8 @@
         '</button>';
     }).join('') || '<div class="empty" style="grid-column:1/-1">还没有收藏</div>';
     attachIconFallbacks(grid);
+    var rows = Math.min(7, Math.max(5, Math.ceil(bookmarks.length / 5)));
+    grid.style.height = (rows * 78 + (rows - 1) * 12) + 'px';
     requestAnimationFrame(function () {
       Array.prototype.forEach.call(grid.querySelectorAll('.more-name'), function (el) {
         var inner = el.firstElementChild;

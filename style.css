@@ -1007,15 +1007,19 @@ video::-webkit-media-controls-overlay-play-button {
   grid-auto-rows: var(--row);
   gap: var(--gap);
   overflow-y: auto;
-  min-height: calc(5 * var(--row) + 4 * var(--gap));
-  max-height: min(calc(7 * var(--row) + 6 * var(--gap)), 58vh);
-  scrollbar-width: thin;
+  max-height: 70vh;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   padding-right: 2px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
 }
 .dock-panel .more-item { width: 100%; min-width: 0; overflow: hidden; }
 @media (max-height: 640px) {
-  .dock-panel-grid { min-height: calc(3 * var(--row) + 2 * var(--gap)); }
+  .dock-panel-grid { max-height: 60vh; }
 }
 @media (max-width: 700px) {
   .dock-panel { width: 92vw; }
 }
+
+.dock-panel-grid::-webkit-scrollbar { width: 0; height: 0; display: none; }
