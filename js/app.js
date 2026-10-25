@@ -901,6 +901,7 @@
       return 'en';
     }
     if (pref === 'zh') return isTw ? 'zh-Hant' : 'zh-Hans';
+    if (pref === 'zh-Hans' || pref === 'zh-Hant') return pref;
     return pref;
   }
 
