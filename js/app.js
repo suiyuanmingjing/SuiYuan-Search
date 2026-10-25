@@ -719,9 +719,9 @@
   }
 
   function openDockPanel() {
-    renderDockPanel();
     el.form.hidden = true;
     $('dockPanel').hidden = false;
+    renderDockPanel();
   }
 
   function closeDockPanel() {

@@ -720,7 +720,9 @@ html.dark .btn.danger { color: #ff9d92; border-color: rgba(255, 157, 146, 0.35);
 .more-item:hover .more-icon { background: var(--tile-hover); border-color: var(--glass-border); }
 .more-icon img { width: 30px; height: 30px; object-fit: contain; border-radius: 6px; }
 .more-name {
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
   font-size: 11px;
   line-height: 1.2;
   color: var(--fg-2);
@@ -1010,7 +1012,7 @@ video::-webkit-media-controls-overlay-play-button {
   scrollbar-width: thin;
   padding-right: 2px;
 }
-.dock-panel .more-item { width: 100%; }
+.dock-panel .more-item { width: 100%; min-width: 0; overflow: hidden; }
 @media (max-height: 640px) {
   .dock-panel-grid { min-height: calc(3 * var(--row) + 2 * var(--gap)); }
 }
