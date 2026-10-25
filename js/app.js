@@ -1548,7 +1548,9 @@
     }
 
     // 初次聚焦（桌面端，可在设置中关闭）
-    if (settings.openFocus !== false && (!window.matchMedia || !window.matchMedia('(pointer: coarse)').matches)) {
+    if (settings.openFocus === false) {
+      try { el.query.removeAttribute('autofocus'); el.query.blur(); } catch (e) {}
+    } else if (!window.matchMedia || !window.matchMedia('(pointer: coarse)').matches) {
       var focusTries = 0;
       var tryFocus = function () {
         focusTries++;
@@ -1561,6 +1563,7 @@
       document.addEventListener('visibilitychange', function () {
         if (!document.hidden) setTimeout(tryFocus, 80);
       });
+      window.addEventListener('pageshow', function () { setTimeout(tryFocus, 80); });
     }
   }
 
