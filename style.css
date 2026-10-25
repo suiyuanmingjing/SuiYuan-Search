@@ -731,7 +731,7 @@ html.dark .btn.danger { color: #ff9d92; border-color: rgba(255, 157, 146, 0.35);
   .dock-wrap { padding: 0 12px; }
   .dock { max-width: calc(100vw - 24px); }
   .settings { padding: 0; }
-  .settings-panel { width: calc(100vw - 28px); aspect-ratio: 3 / 4; height: auto; max-height: calc(100dvh - 32px); border-radius: 18px; border: 1px solid var(--panel-border); }
+  .settings-panel { width: calc(100vw - 28px); height: 72vh; max-height: calc(100dvh - 32px); border-radius: 18px; border: 1px solid var(--panel-border); }
   .settings-body { padding: 4px 16px 28px; }
   .tabs { padding: 10px 12px 0; }
   .modal { padding: 16px; }

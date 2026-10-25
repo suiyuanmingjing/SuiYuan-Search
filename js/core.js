@@ -52,6 +52,7 @@
       }
     },
     history: true,
+    language: 'auto',
     clock: { showDate: true, hour24: true, showSeconds: false, blinkColon: false, weight: 200 },
     scrim: 18
   };
@@ -102,6 +103,7 @@
     }
     if (raw.theme === 'light' || raw.theme === 'dark' || raw.theme === 'auto') s.theme = raw.theme;
     if (typeof raw.history === 'boolean') s.history = raw.history;
+    if (typeof raw.language === 'string') s.language = raw.language;
 
     var bg = raw.background;
     if (typeof bg === 'string') {

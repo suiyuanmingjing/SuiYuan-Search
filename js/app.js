@@ -98,6 +98,8 @@
       }, 500);
       bindEvents();
 
+      applyLanguage();
+
       // 进入时轻量探测必应网络，失败用气泡提示（不弹浏览器对话框）
       (function () {
         var probe = new Image();
@@ -375,7 +377,7 @@
         : '';
       return '<button type="button" data-engine="' + esc(e.id) + '">' +
         '<img src="' + esc(e.icon) + '" alt="">' +
-        '<span>' + esc(e.name) + '</span>' + check + '</button>';
+        '<span>' + esc(trName(e.name)) + '</span>' + check + '</button>';
     }).join('');
     attachIconFallbacks(el.engineMenu);
   }
@@ -698,7 +700,7 @@
     var cards = allEngines().map(function (e) {
       return '<button type="button" class="engine-card' + (e.id === settings.engine ? ' active' : '') + '" data-engine="' + esc(e.id) + '">' +
         '<img src="' + esc(e.icon) + '" alt="">' +
-        '<span>' + esc(e.name) + '</span></button>';
+        '<span>' + esc(trName(e.name)) + '</span></button>';
     }).join('');
     $('engineCards').innerHTML = cards;
     attachIconFallbacks($('engineCards'));
@@ -742,6 +744,7 @@
     applyClockWeight();
 
     $('historyToggle').setAttribute('aria-pressed', settings.history ? 'true' : 'false');
+    if ($('languageSelect')) $('languageSelect').value = settings.language || 'auto';
 
     renderBookmarkList();
   }
@@ -756,7 +759,7 @@
     wrap.innerHTML = list.map(function (e, i) {
       return '<div class="list-row">' +
         '<img src="' + esc(e.icon || 'img/ico.ico') + '" data-host="' + esc(SY.hostOf((e.url || '').replace('%s', ''))) + '" alt="">' +
-        '<div class="list-main"><div class="list-title">' + esc(e.name) + '</div><div class="list-sub">' + esc(e.url) + '</div></div>' +
+        '<div class="list-main"><div class="list-title">' + esc(trName(e.name)) + '</div><div class="list-sub">' + esc(e.url) + '</div></div>' +
         '<div class="list-actions">' +
         '<button type="button" class="mini" data-edit-engine="' + i + '" title="编辑">✎</button>' +
         '<button type="button" class="mini danger" data-del-engine="' + i + '" title="删除">✕</button>' +
@@ -883,6 +886,94 @@
   }
 
   /* ---------------- 事件 ---------------- */
+  var i18nEntries = null;
+
+  function detectLang() {
+    var pref = (settings && settings.language) || 'auto';
+    var nav = (navigator.language || 'zh-CN').toLowerCase();
+    var isTw = /tw|hk|mo|hant/.test(nav);
+    if (pref === 'auto') {
+      if (nav.indexOf('zh') === 0) return isTw ? 'zh-Hant' : 'zh-Hans';
+      if (nav.indexOf('fr') === 0) return 'fr';
+      if (nav.indexOf('ru') === 0) return 'ru';
+      if (nav.indexOf('es') === 0) return 'es';
+      if (nav.indexOf('ar') === 0) return 'ar';
+      return 'en';
+    }
+    if (pref === 'zh') return isTw ? 'zh-Hant' : 'zh-Hans';
+    return pref;
+  }
+
+  var NAME_I18N = {
+    en: { '必应': 'Bing', '谷歌': 'Google', '百度': 'Baidu', '默认视频': 'Default video', '默认壁纸 · 晨光': 'Dawn', '默认壁纸 · 日落': 'Sunset', '默认壁纸 · 海底': 'Underwater', '内置壁纸 · 亮色': 'Light', '内置壁纸 · 暗色': 'Dark' },
+    fr: { '必应': 'Bing', '谷歌': 'Google', '百度': 'Baidu', '默认视频': 'Vidéo par défaut', '默认壁纸 · 晨光': 'Aube', '默认壁纸 · 日落': 'Coucher de soleil', '默认壁纸 · 海底': 'Sous-marin', '内置壁纸 · 亮色': 'Clair', '内置壁纸 · 暗色': 'Sombre' },
+    ru: { '必应': 'Bing', '谷歌': 'Google', '百度': 'Baidu', '默认视频': 'Видео по умолчанию', '默认壁纸 · 晨光': 'Рассвет', '默认壁纸 · 日落': 'Закат', '默认壁纸 · 海底': 'Подводный мир', '内置壁纸 · 亮色': 'Светлая', '内置壁纸 · 暗色': 'Тёмная' },
+    es: { '必应': 'Bing', '谷歌': 'Google', '百度': 'Baidu', '默认视频': 'Vídeo predeterminado', '默认壁纸 · 晨光': 'Amanecer', '默认壁纸 · 日落': 'Atardecer', '默认壁纸 · 海底': 'Bajo el mar', '内置壁纸 · 亮色': 'Claro', '内置壁纸 · 暗色': 'Oscuro' },
+    ar: { '必应': 'Bing', '谷歌': 'Google', '百度': 'Baidu', '默认视频': 'فيديو افتراضي', '默认壁纸 · 晨光': 'فجر', '默认壁纸 · 日落': 'غروب', '默认壁纸 · 海底': 'تحت الماء', '内置壁纸 · 亮色': 'فاتح', '内置壁纸 · 暗色': 'داكن' }
+  };
+
+  function trName(s) {
+    if (!s) return s;
+    var lang = detectLang();
+    if (lang === 'zh-Hans') return s;
+    var d = NAME_I18N[lang] || {};
+    var e = NAME_I18N.en || {};
+    return d[s] || e[s] || s;
+  }
+
+  function collectI18nEntries() {
+    i18nEntries = [];
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        var p = node.parentNode;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        if (p.closest && p.closest('#languageSelect, script, style, [data-i18n-skip]')) return NodeFilter.FILTER_REJECT;
+        if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    while (walker.nextNode()) {
+      i18nEntries.push({ node: walker.currentNode, orig: walker.currentNode.nodeValue });
+    }
+    ['placeholder', 'title', 'aria-label'].forEach(function (attr) {
+      document.querySelectorAll('[' + attr + ']').forEach(function (el) {
+        if (el.closest('#languageSelect, [data-i18n-skip]')) return;
+        i18nEntries.push({ el: el, attr: attr, orig: el.getAttribute(attr) });
+      });
+    });
+  }
+
+  function applyLanguage() {
+    if (!settings) return;
+    if (!i18nEntries) collectI18nEntries();
+    var lang = detectLang();
+    var dict = (window.SY && SY.I18N && SY.I18N[lang]) || null;
+    var en = (window.SY && SY.I18N && SY.I18N.en) || {};
+    i18nEntries.forEach(function (e) {
+      var key = String(e.orig).trim();
+      var val;
+      if (lang === 'zh-Hans') val = key;
+      else val = (dict && dict[key] != null) ? dict[key] : (en[key] != null ? en[key] : key);
+      if (e.el) {
+        e.el.setAttribute(e.attr, val);
+      } else {
+        var lead = e.orig.match(/^\s*/)[0];
+        var trail = e.orig.match(/\s*$/)[0];
+        e.node.nodeValue = lead + val + trail;
+      }
+    });
+    document.documentElement.lang = lang === 'zh-Hant' ? 'zh-Hant' : (lang === 'zh-Hans' ? 'zh-CN' : lang);
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.title = (lang === 'zh-Hans') ? '随缘搜索' : ((dict && dict['随缘搜索']) || en['随缘搜索'] || 'SuiYuan Search');
+    var sel = $('languageSelect');
+    if (sel) sel.value = settings.language || 'auto';
+    try {
+      wallGridDirty = true;
+      videoGridDirty = true;
+      if (el.settings && !el.settings.hidden) syncSettingsUI();
+    } catch (e) {}
+  }
+
   function rafThrottle(fn) {
     var queued = false;
     var lastEvent = null;
@@ -1231,6 +1322,12 @@
       saveNow();
     });
 
+    $('languageSelect').addEventListener('change', function () {
+      settings.language = this.value;
+      applyLanguage();
+      saveNow();
+    });
+
     $('historyToggle').addEventListener('click', function () {
       settings.history = !settings.history;
       this.setAttribute('aria-pressed', settings.history ? 'true' : 'false');
@@ -1452,7 +1549,7 @@
         : '';
       return '<button type="button" class="wall-item' + (b.wallpaperId === w.id ? ' active' : '') + '" data-wall="' + esc(w.id) + '">' +
         (url ? '<img src="' + esc(url) + '" alt="" loading="lazy" decoding="async">' : '<span class="wall-empty">预览加载中…</span>') +
-        '<span class="wall-name">' + esc(w.name || '未命名') + '</span>' +
+        '<span class="wall-name">' + esc(trName(w.name) || '未命名') + '</span>' +
         del + '</button>';
     }).join('');
   }
@@ -1650,7 +1747,7 @@
       return '<button type="button" class="wall-item' + (b.videoId === v.id ? ' active' : '') + '" data-video="' + esc(v.id) + '">' +
         (url ? '<video src="' + esc(url) + '#t=0.1" muted preload="metadata" playsinline></video>' : '<span class="wall-empty">加载中…</span>') +
         '<span class="wall-badge">▶</span>' +
-        '<span class="wall-name">' + esc(v.name || '视频') + '</span>' +
+        '<span class="wall-name">' + esc(trName(v.name) || '视频') + '</span>' +
         '<span class="wall-del" data-del-video="' + esc(v.id) + '" title="删除">×</span>' +
         '</button>';
     }).join('');
