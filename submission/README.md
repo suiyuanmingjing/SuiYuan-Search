@@ -25,3 +25,7 @@
 - 包内默认视频 `video/default.mp4` 约 50MB，总包体约 55MB，低于 100MB 限制
 - 包内不含 `.git`、`legacy/`、`docs/`、`submission/`
 - manifest 版本号 2.1.0
+
+## 多语言
+manifest 已使用 `__MSG_extensionName__` / `__MSG_extensionDescription__`，并包含 `_locales/en|zh_CN|zh_TW|fr|ru|es|ar/messages.json`。
+重新上传安装包后，Partner Center 的 Store Listings 会列出这 7 种语言；截图和促销图可以用「复制所有语言」批量带过去。

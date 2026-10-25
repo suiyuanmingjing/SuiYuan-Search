@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "随缘搜索 - SuiYuan Search",
+  "name": "__MSG_extensionName__",
   "version": "2.1.0",
-  "description": "简洁的新标签页：大时钟、胶囊搜索、壁纸库、必应每日、多语言界面",
+  "description": "__MSG_extensionDescription__",
   "permissions": [
     "storage",
     "bookmarks"
@@ -36,5 +36,6 @@
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
-  "homepage_url": "https://github.com/suiyuanmingjing/SuiYuan-Search"
+  "homepage_url": "https://github.com/suiyuanmingjing/SuiYuan-Search",
+  "default_locale": "en"
 }
