@@ -99,6 +99,7 @@
       bindEvents();
 
       applyLanguage();
+      applyDockPosition();
 
       // 进入时轻量探测必应网络，失败用气泡提示（不弹浏览器对话框）
       (function () {
@@ -858,6 +859,7 @@
     $('historyToggle').setAttribute('aria-pressed', settings.history ? 'true' : 'false');
     if ($('languageSelect')) $('languageSelect').value = settings.language || 'auto';
     $('openFocusToggle').setAttribute('aria-pressed', settings.openFocus !== false ? 'true' : 'false');
+    applyDockPosition();
 
     renderBookmarkList();
   }
@@ -924,6 +926,13 @@
       syncSettingsUI();
       toast('已导入 ' + added.length + ' 条收藏');
     });
+  }
+
+  function applyDockPosition() {
+    var top = settings.dockPosition === 'top';
+    document.body.classList.toggle('dock-top', top);
+    var btn = $('dockTopBtn');
+    if (btn) btn.textContent = top ? '移到底部' : '移至顶部';
   }
 
   function renderBookmarkList() {
@@ -1632,6 +1641,23 @@
         toast('已删除');
         });
       }
+    });
+
+    $('dockTopBtn').addEventListener('click', function () {
+      settings.dockPosition = settings.dockPosition === 'top' ? 'bottom' : 'top';
+      applyDockPosition();
+      saveNow();
+    });
+
+    $('clearBmBtn').addEventListener('click', function () {
+      askConfirm('清空收藏夹？只会清空本扩展的快捷方式，不影响浏览器收藏夹。', function () {
+        bookmarks = [];
+        saveBookmarks();
+        renderDock();
+        renderBookmarkList();
+        syncSettingsUI();
+        toast('收藏夹已清空');
+      });
     });
 
     $('importBrowserBm').addEventListener('click', importBrowserBookmarks);

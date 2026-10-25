@@ -1029,3 +1029,13 @@ video::-webkit-media-controls-overlay-play-button {
   .dock-panel .more-icon { width: 44px; height: 44px; border-radius: 13px; }
   .dock-panel .more-name { font-size: 10px; }
 }
+
+/* Dock 位置：顶部 / 底部 */
+body.dock-top .dock-wrap {
+  top: 20px;
+  bottom: auto;
+}
+body.dock-top .toast {
+  bottom: auto;
+  top: 116px;
+}
