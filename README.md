@@ -4,11 +4,11 @@
 
 ## 截图
 
-<p align="center"><img src="docs/screenshots/release/01-home.jpg" width="820" alt="首页"></p>
+<p align="center"><img src="submission/screenshots/01-home.png" width="820" alt="首页"></p>
 
-<p align="center"><img src="docs/screenshots/release/02-settings.jpg" width="820" alt="外观设置"></p>
+<p align="center"><img src="submission/screenshots/02-settings.png" width="820" alt="外观设置"></p>
 
-<p align="center"><img src="docs/screenshots/release/03-focal.jpg" width="62%" alt="缩放中心"></p>
+<p align="center"><img src="submission/screenshots/03-focal.png" width="820" alt="缩放中心"></p>
 
 ## 使用
 
