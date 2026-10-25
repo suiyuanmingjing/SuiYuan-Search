@@ -38,6 +38,6 @@
 
 - 网页：下载源码解压，双击 `index.html`
 - Edge / Chrome：`edge://extensions` → 开发人员模式 → 加载解压缩的扩展
-- 商店包：`dist/SuiYuan-Search-2.1.0-edge.zip`
+- Edge 加载项商店：审核通过后可直接搜索「随缘搜索」
 
 完整变更：https://github.com/suiyuanmingjing/SuiYuan-Search/compare/v2.0.0...main
