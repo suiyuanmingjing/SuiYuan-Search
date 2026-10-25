@@ -671,16 +671,52 @@
     });
   }
 
+  function bookmarkKey(url) {
+    try {
+      var u = new URL(url);
+      var host = u.hostname.replace(/^www\./i, '').toLowerCase();
+      var path = u.pathname.replace(/\/+$/, '');
+      return host + path + u.search;
+    } catch (e) {
+      return String(url || '').trim().toLowerCase();
+    }
+  }
+
+  function dedupeBookmarks(list) {
+    var seen = {};
+    return (list || []).filter(function (b) {
+      if (!b || !b.url) return false;
+      var k = bookmarkKey(b.url);
+      if (seen[k]) return false;
+      seen[k] = 1;
+      return true;
+    });
+  }
+
   function openMoreModal() {
     var grid = $('moreGrid');
     grid.innerHTML = bookmarks.map(function (b) {
       var icon = b.icon || SY.faviconFor(b.url);
-      return '<button type="button" class="dock-item" data-url="' + esc(b.url) + '" title="' + esc(b.title) + '">' +
+      return '<button type="button" class="more-item" data-url="' + esc(b.url) + '" title="' + esc(b.title) + '">' +
+        '<span class="more-icon">' +
         (icon ? '<img src="' + esc(icon) + '" data-host="' + esc(SY.hostOf(b.url)) + '" alt="">' : '<span class="letter">' + esc(firstChar(b.title)) + '</span>') +
+        '</span>' +
+        '<span class="more-name"><span>' + esc(b.title) + '</span></span>' +
         '</button>';
     }).join('') || '<div class="empty">还没有收藏</div>';
     attachIconFallbacks(grid);
     openModal('moreModal');
+    requestAnimationFrame(function () {
+      Array.prototype.forEach.call(grid.querySelectorAll('.more-name'), function (el) {
+        var inner = el.firstElementChild;
+        if (!inner) return;
+        var over = inner.scrollWidth - el.clientWidth;
+        if (over > 2) {
+          el.classList.add('marquee');
+          el.style.setProperty('--shift', (-over) + 'px');
+        }
+      });
+    });
   }
 
   /* ---------------- 设置界面 ---------------- */
@@ -810,11 +846,12 @@
       })(tree || []);
 
       var seen = {};
-      bookmarks.forEach(function (b) { seen[b.url] = 1; });
+      bookmarks.forEach(function (b) { seen[bookmarkKey(b.url)] = 1; });
       var added = [];
       found.forEach(function (b) {
-        if (seen[b.url]) return;
-        seen[b.url] = 1;
+        var k = bookmarkKey(b.url);
+        if (seen[k]) return;
+        seen[k] = 1;
         added.push(b);
       });
 
@@ -1550,7 +1587,7 @@
             return { title: b.title || b.url, url: b.url, icon: b.icon || SY.faviconFor(b.url) };
           });
           if (!cleaned.length) throw new Error('没有有效条目');
-          bookmarks = cleaned;
+          bookmarks = dedupeBookmarks(cleaned);
           saveBookmarks();
           renderDock();
           renderBookmarkList();
