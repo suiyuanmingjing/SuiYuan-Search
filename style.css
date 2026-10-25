@@ -926,3 +926,12 @@ html.dark body.video-bg .suggestions {
   text-align: right;
 }
 .about-link:hover { opacity: 0.7; }
+
+/* 隐藏视频元素自带的画中画/媒体控件 */
+video::-webkit-media-controls,
+video::-webkit-media-controls-enclosure,
+video::-webkit-media-controls-picture-in-picture-button,
+video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+}

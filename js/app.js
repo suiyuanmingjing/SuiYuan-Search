@@ -1746,7 +1746,7 @@
     grid.innerHTML = list.map(function (v) {
       var url = videoUrls[v.id] || v.url || '';
       return '<button type="button" class="wall-item' + (b.videoId === v.id ? ' active' : '') + '" data-video="' + esc(v.id) + '">' +
-        (url ? '<video src="' + esc(url) + '#t=0.1" muted preload="metadata" playsinline></video>' : '<span class="wall-empty">加载中…</span>') +
+        (url ? '<video src="' + esc(url) + '#t=0.1" muted preload="metadata" playsinline disablepictureinpicture disableremoteplayback></video>' : '<span class="wall-empty">加载中…</span>') +
         '<span class="wall-badge">▶</span>' +
         '<span class="wall-name">' + esc(trName(v.name) || '视频') + '</span>' +
         (v.kind === 'builtin' ? '' : '<span class="wall-del" data-del-video="' + esc(v.id) + '" title="删除">×</span>') +
