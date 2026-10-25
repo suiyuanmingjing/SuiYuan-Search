@@ -1548,9 +1548,10 @@
     }
 
     // 初次聚焦（桌面端，可在设置中关闭）
-    if (settings.openFocus === false) {
+    var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (settings.openFocus === false || coarse) {
       try { el.query.removeAttribute('autofocus'); el.query.blur(); } catch (e) {}
-    } else if (!window.matchMedia || !window.matchMedia('(pointer: coarse)').matches) {
+    } else {
       var focusTries = 0;
       var tryFocus = function () {
         focusTries++;
