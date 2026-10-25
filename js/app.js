@@ -98,6 +98,25 @@
       }, 500);
       bindEvents();
 
+      // 进入时轻量探测必应网络，失败用气泡提示（不弹浏览器对话框）
+      (function () {
+        var probe = new Image();
+        var done = false;
+        var timer = setTimeout(function () {
+          if (done) return;
+          done = true;
+          toast('网络连接较慢，必应壁纸可能加载失败');
+        }, 6000);
+        probe.onload = function () { done = true; clearTimeout(timer); };
+        probe.onerror = function () {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          toast('网络连接异常，必应壁纸可能无法加载');
+        };
+        probe.src = 'https://cn.bing.com/favicon.ico?d=' + Date.now();
+      })();
+
       if (location.search.indexOf('debug') >= 0) {
         var dbg = document.createElement('pre');
         dbg.style.cssText = 'position:fixed;left:8px;top:8px;z-index:9999;max-width:48vw;max-height:60vh;overflow:auto;background:rgba(0,0,0,.78);color:#7CFF8A;font:11px/1.5 monospace;padding:10px;border-radius:8px;white-space:pre-wrap';
@@ -215,8 +234,10 @@
     if (!settings) return;
     var b = settings.background;
     var vv = (b.type === 'video') ? currentVideo() : null;
+    var sigWp = currentWallpaper();
+    var sigFocal = (sigWp && sigWp.focal) || { x: 0.5, y: 0.5 };
     var sig = [b.type, b.solid, b.gradient.start, b.gradient.end, b.gradient.angle, b.opacity, b.blur,
-      b.wallpaperId, wallpaperUrl(currentWallpaper()), b.videoId,
+      b.wallpaperId, wallpaperUrl(sigWp), sigFocal.x, sigFocal.y, b.videoId,
       vv ? (videoUrls[vv.id] || vv.url || '') : ''].join('|');
     if (sig === lastBgSig) return;
     lastBgSig = sig;
@@ -431,7 +452,7 @@
     var q = el.query.value.trim();
     clearTimeout(sugTimer);
     if (sugAbort) { try { sugAbort.abort(); } catch (e) {} sugAbort = null; }
-    if (!q) { showHistory(); return; }
+    if (!q) { hideSuggestions(); showHistory(); return; }
     hideSuggestions();
     if (sugCache[q]) showSuggestions(sugCache[q].slice(0, 8));
     sugTimer = setTimeout(function () { fetchSuggestions(q); }, 120);
@@ -1823,7 +1844,7 @@
   }
 
   function showHistory() {
-    if (!settings.history || !historyItems.length) return;
+    if (!settings.history || !historyItems.length) { hideSuggestions(); return; }
     el.suggestions.innerHTML = historyItems.map(function (h, i) {
       return '<button type="button" data-hist="' + i + '">' + ICON_CLOCK + '<span>' + esc(h) + '</span></button>';
     }).join('') + '<div class="sug-foot"><button type="button" id="clearHistory">清空搜索历史</button></div>';

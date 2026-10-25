@@ -127,8 +127,8 @@ html.dark .bg {
 .clock-block {
   position: absolute;
   left: 50%;
-  top: 17%;
-  transform: translate(-50%, -50%);
+  top: 12%;
+  transform: translateX(-50%);
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -727,9 +727,8 @@ html.dark .btn.danger { color: #ff9d92; border-color: rgba(255, 157, 146, 0.35);
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
 @media (max-width: 700px) {
-  .clock-block { top: 16%; }
-  .search { top: 32%; width: 90vw; }
-  .dock-wrap { bottom: 16px; padding: 0 12px; }
+  .search { width: 90vw; }
+  .dock-wrap { padding: 0 12px; }
   .dock { max-width: calc(100vw - 24px); }
   .settings { padding: 0; }
   .settings-panel { width: calc(100vw - 28px); aspect-ratio: 3 / 4; height: auto; max-height: calc(100dvh - 32px); border-radius: 18px; border: 1px solid var(--panel-border); }
@@ -737,11 +736,6 @@ html.dark .btn.danger { color: #ff9d92; border-color: rgba(255, 157, 146, 0.35);
   .tabs { padding: 10px 12px 0; }
   .modal { padding: 16px; }
   .toast { bottom: 88px; }
-}
-
-@media (max-height: 640px) {
-  .clock-block { top: 15%; }
-  .search { top: 34%; height: 48px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -30,18 +30,21 @@
     customEngines: [],
     theme: 'auto',
     background: {
-      type: 'image',
+      type: 'video',
       solid: '#1b2430',
       gradient: { start: '#141e30', end: '#243b55', angle: 135 },
       video: null,
-      videos: [],
-      videoId: '',
+      videos: [
+        { id: 'builtin-video', kind: 'video', name: '默认视频', url: 'video/default.mp4' }
+      ],
+      videoId: 'builtin-video',
       opacity: 100,
       blur: 0,
-      wallpaperId: 'builtin-light',
+      wallpaperId: 'builtin-1',
       wallpapers: [
-        { id: 'builtin-light', kind: 'builtin', name: '内置壁纸 · 亮色', url: 'img/亮色.jpg', focal: { x: 0.5, y: 0.5 } },
-        { id: 'builtin-dark', kind: 'builtin', name: '内置壁纸 · 暗色', url: 'img/暗色.jpg', focal: { x: 0.5, y: 0.5 } }
+        { id: 'builtin-1', kind: 'builtin', name: '默认壁纸 · 晨光', url: 'img/wallpaper-1.jpg', focal: { x: 0.5, y: 0.5 } },
+        { id: 'builtin-2', kind: 'builtin', name: '默认壁纸 · 日落', url: 'img/wallpaper-2.jpg', focal: { x: 0.5, y: 0.5 } },
+        { id: 'builtin-3', kind: 'builtin', name: '默认壁纸 · 海底', url: 'img/wallpaper-3.jpg', focal: { x: 0.5, y: 0.5 } }
       ],
       bing: {
         url: '', base: '', copyright: '', date: '',
@@ -98,6 +101,7 @@
       s.customEngines = raw.customEngines.filter(function (e) { return e && e.url && e.name; });
     }
     if (raw.theme === 'light' || raw.theme === 'dark' || raw.theme === 'auto') s.theme = raw.theme;
+    if (typeof raw.history === 'boolean') s.history = raw.history;
 
     var bg = raw.background;
     if (typeof bg === 'string') {
@@ -189,6 +193,20 @@
     if (s.background.bing.url && !(Array.isArray(bg.wallpapers) && bg.wallpapers.length) &&
         (bg.wallpaperId === 'bing' || !bg.wallpaperId)) {
       s.background.wallpaperId = 'bing';
+    }
+
+    // 旧的内置亮/暗壁纸：升级为新的三张默认壁纸 + 默认视频
+    var onlyOldBuiltin = s.background.wallpapers.length > 0 && s.background.wallpapers.every(function (w) {
+      return w.id === 'builtin-light' || w.id === 'builtin-dark';
+    });
+    if (onlyOldBuiltin) {
+      s.background.wallpapers = clone(DEFAULT_SETTINGS.background.wallpapers);
+      s.background.wallpaperId = 'builtin-1';
+      if (!s.background.videos.length) {
+        s.background.videos = clone(DEFAULT_SETTINGS.background.videos);
+        s.background.videoId = DEFAULT_SETTINGS.background.videoId;
+        s.background.type = 'video';
+      }
     }
 
     var ids = s.background.wallpapers.map(function (w) { return w.id; });
