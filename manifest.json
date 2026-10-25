@@ -16,12 +16,19 @@
     "https://suggestion.baidu.com/*"
   ],
   "icons": {
-    "16": "img/ico.ico",
-    "48": "img/ico.ico",
-    "128": "img/ico.ico"
+    "16": "img/icon-16.png",
+    "32": "img/icon-32.png",
+    "48": "img/icon-48.png",
+    "128": "img/icon-128.png"
   },
   "action": {
-    "default_title": "打开随缘搜索"
+    "default_title": "打开随缘搜索",
+    "default_icon": {
+      "16": "img/icon-16.png",
+      "32": "img/icon-32.png",
+      "48": "img/icon-48.png",
+      "128": "img/icon-128.png"
+    }
   },
   "background": {
     "service_worker": "background.js"
