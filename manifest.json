@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SuiYuan Search",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "随缘搜索 — 简洁的浏览器起始页，多引擎搜索、自定义捷径、壁纸与时钟",
   "permissions": [
     "storage"

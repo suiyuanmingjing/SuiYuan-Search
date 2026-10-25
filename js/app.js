@@ -1749,7 +1749,7 @@
         (url ? '<video src="' + esc(url) + '#t=0.1" muted preload="metadata" playsinline></video>' : '<span class="wall-empty">加载中…</span>') +
         '<span class="wall-badge">▶</span>' +
         '<span class="wall-name">' + esc(trName(v.name) || '视频') + '</span>' +
-        '<span class="wall-del" data-del-video="' + esc(v.id) + '" title="删除">×</span>' +
+        (v.kind === 'builtin' ? '' : '<span class="wall-del" data-del-video="' + esc(v.id) + '" title="删除">×</span>') +
         '</button>';
     }).join('');
   }

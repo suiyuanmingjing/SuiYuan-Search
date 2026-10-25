@@ -35,7 +35,7 @@
       gradient: { start: '#141e30', end: '#243b55', angle: 135 },
       video: null,
       videos: [
-        { id: 'builtin-video', kind: 'video', name: '默认视频', url: 'video/default.mp4' }
+        { id: 'builtin-video', kind: 'builtin', name: '默认视频', url: 'video/default.mp4' }
       ],
       videoId: 'builtin-video',
       opacity: 100,
@@ -188,6 +188,9 @@
       });
       s.background.videoId = 'v_legacy';
     }
+    s.background.videos.forEach(function (v) {
+      if (v.id === 'builtin-video' || v.url === 'video/default.mp4') v.kind = 'builtin';
+    });
     if (!s.background.videoId && s.background.videos.length) s.background.videoId = s.background.videos[0].id;
     if (s.background.type === 'video' && !s.background.videos.length) s.background.type = 'image';
 
