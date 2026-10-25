@@ -270,8 +270,8 @@
     var blur = (typeof b.blur === 'number' && isFinite(b.blur)) ? b.blur : 0;
 
     if (b.type === 'video') {
-      // 先把当前图片壁纸铺上，视频就绪后再盖上去，避免加载期空白
-      setImageLayer(imgUrl, 1, 0, focal);
+      // 视频加载期间显示灰色底，不展示默认壁纸
+      el.bg.style.background = '#1b1d22';
 
       var v = currentVideo();
       var vurl = v ? (videoUrls[v.id] || v.url || '') : '';
@@ -294,8 +294,7 @@
 
       video.addEventListener('loadeddata', reveal, { once: true });
       video.addEventListener('error', function () {
-        el.bgImage.classList.add('show');
-        el.bgImage.style.opacity = '1';
+        setImageLayer(imgUrl, 1, 0, focal);
         video.classList.remove('show');
       }, { once: true });
       if (video.readyState >= 2) reveal();
@@ -745,6 +744,7 @@
 
     $('historyToggle').setAttribute('aria-pressed', settings.history ? 'true' : 'false');
     if ($('languageSelect')) $('languageSelect').value = settings.language || 'auto';
+    $('openFocusToggle').setAttribute('aria-pressed', settings.openFocus !== false ? 'true' : 'false');
 
     renderBookmarkList();
   }
@@ -1323,6 +1323,12 @@
       saveNow();
     });
 
+    $('openFocusToggle').addEventListener('click', function () {
+      settings.openFocus = !settings.openFocus;
+      this.setAttribute('aria-pressed', settings.openFocus ? 'true' : 'false');
+      saveNow();
+    });
+
     $('languageSelect').addEventListener('change', function () {
       settings.language = this.value;
       applyLanguage();
@@ -1506,8 +1512,8 @@
       else if (mql.addListener) mql.addListener(onScheme);
     }
 
-    // 初次聚焦（桌面端）
-    if (!window.matchMedia || !window.matchMedia('(pointer: coarse)').matches) {
+    // 初次聚焦（桌面端，可在设置中关闭）
+    if (settings.openFocus !== false && (!window.matchMedia || !window.matchMedia('(pointer: coarse)').matches)) {
       setTimeout(function () { el.query.focus(); }, 60);
     }
   }

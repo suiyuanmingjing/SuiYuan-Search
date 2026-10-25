@@ -397,9 +397,8 @@ html.dark .overlay-backdrop { background: rgba(0, 0, 0, 0.5); }
 .settings-panel {
   position: relative;
   outline: none;
-  width: min(860px, calc(100vw - 64px), calc((100vh - 96px) * 4 / 3));
-  aspect-ratio: 4 / 3;
-  height: auto;
+  width: min(860px, calc(100vw - 48px));
+  height: 72vh;
   max-width: calc(100vw - 48px);
   max-height: calc(100vh - 48px);
   display: flex;

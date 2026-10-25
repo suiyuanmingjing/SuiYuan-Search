@@ -585,3 +585,16 @@ SY.I18N = {
   "界面语言": "لغة الواجهة"
 }
 };
+
+SY.I18N['zh-Hant']['打开时聚焦搜索框'] = '開啟時聚焦搜尋框';
+SY.I18N['zh-Hant']['启动页面后自动把光标放进搜索框'] = '啟動頁面後自動將游標放進搜尋框';
+SY.I18N.en['打开时聚焦搜索框'] = 'Focus search box on open';
+SY.I18N.en['启动页面后自动把光标放进搜索框'] = 'Place the cursor in the search box after launch';
+SY.I18N.fr['打开时聚焦搜索框'] = 'Focaliser la recherche à l\'ouverture';
+SY.I18N.fr['启动页面后自动把光标放进搜索框'] = 'Place le curseur dans la recherche au démarrage';
+SY.I18N.ru['打开时聚焦搜索框'] = 'Фокус на поиске при открытии';
+SY.I18N.ru['启动页面后自动把光标放进搜索框'] = 'Ставит курсор в поле поиска при запуске';
+SY.I18N.es['打开时聚焦搜索框'] = 'Enfocar búsqueda al abrir';
+SY.I18N.es['启动页面后自动把光标放进搜索框'] = 'Coloca el cursor en el buscador al iniciar';
+SY.I18N.ar['打开时聚焦搜索框'] = 'التركيز على البحث عند الفتح';
+SY.I18N.ar['启动页面后自动把光标放进搜索框'] = 'يضع المؤشر في حقل البحث عند البدء';

@@ -53,6 +53,7 @@
     },
     history: true,
     language: 'auto',
+    openFocus: true,
     clock: { showDate: true, hour24: true, showSeconds: false, blinkColon: false, weight: 200 },
     scrim: 18
   };
@@ -104,6 +105,7 @@
     if (raw.theme === 'light' || raw.theme === 'dark' || raw.theme === 'auto') s.theme = raw.theme;
     if (typeof raw.history === 'boolean') s.history = raw.history;
     if (typeof raw.language === 'string') s.language = raw.language;
+    if (typeof raw.openFocus === 'boolean') s.openFocus = raw.openFocus;
 
     var bg = raw.background;
     if (typeof bg === 'string') {
