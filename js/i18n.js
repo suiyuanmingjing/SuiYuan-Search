@@ -598,3 +598,10 @@ SY.I18N.es['打开时聚焦搜索框'] = 'Enfocar búsqueda al abrir';
 SY.I18N.es['启动页面后自动把光标放进搜索框'] = 'Coloca el cursor en el buscador al iniciar';
 SY.I18N.ar['打开时聚焦搜索框'] = 'التركيز على البحث عند الفتح';
 SY.I18N.ar['启动页面后自动把光标放进搜索框'] = 'يضع المؤشر في حقل البحث عند البدء';
+
+SY.I18N['zh-Hant']['导入浏览器收藏夹'] = '匯入瀏覽器書籤';
+SY.I18N.en['导入浏览器收藏夹'] = 'Import browser bookmarks';
+SY.I18N.fr['导入浏览器收藏夹'] = 'Importer les favoris du navigateur';
+SY.I18N.ru['导入浏览器收藏夹'] = 'Импорт закладок браузера';
+SY.I18N.es['导入浏览器收藏夹'] = 'Importar marcadores del navegador';
+SY.I18N.ar['导入浏览器收藏夹'] = 'استيراد إشارات المتصفح';

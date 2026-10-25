@@ -793,6 +793,50 @@
     attachIconFallbacks(wrap);
   }
 
+  function importBrowserBookmarks() {
+    if (!IS_EXTENSION || !chrome.bookmarks || !chrome.bookmarks.getTree) {
+      toast('仅扩展模式支持导入浏览器收藏夹');
+      return;
+    }
+    chrome.bookmarks.getTree(function (tree) {
+      var found = [];
+      (function walk(nodes) {
+        (nodes || []).forEach(function (n) {
+          if (n.url && /^https?:/i.test(n.url)) {
+            found.push({ title: n.title || n.url, url: n.url, icon: '' });
+          }
+          if (n.children) walk(n.children);
+        });
+      })(tree || []);
+
+      var seen = {};
+      bookmarks.forEach(function (b) { seen[b.url] = 1; });
+      var added = [];
+      found.forEach(function (b) {
+        if (seen[b.url]) return;
+        seen[b.url] = 1;
+        added.push(b);
+      });
+
+      if (!added.length) { toast('没有新的收藏可导入'); return; }
+
+      // 同步存储单项约 8KB，按体积截断，避免写入失败
+      var merged = bookmarks.concat(added);
+      while (added.length && JSON.stringify(merged).length > 7000) {
+        added.pop();
+        merged = bookmarks.concat(added);
+      }
+      if (!added.length) { toast('收藏夹已接近同步容量上限'); return; }
+
+      bookmarks = merged;
+      saveBookmarks();
+      renderDock();
+      renderBookmarkList();
+      syncSettingsUI();
+      toast('已导入 ' + added.length + ' 条收藏');
+    });
+  }
+
   function renderBookmarkList() {
     var wrap = $('bmList');
     if (!bookmarks.length) {
@@ -1480,6 +1524,8 @@
         });
       }
     });
+
+    $('importBrowserBm').addEventListener('click', importBrowserBookmarks);
 
     $('exportBmBtn').addEventListener('click', function () {
       var blob = new Blob([JSON.stringify(bookmarks, null, 2)], { type: 'application/json' });
