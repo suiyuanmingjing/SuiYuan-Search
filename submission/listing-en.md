@@ -26,6 +26,7 @@ Privacy:
 - No data is collected or uploaded
 - Settings, bookmarks and history stay in the browser (chrome.storage in extension, localStorage on the web)
 - Images and videos stay in local IndexedDB
+- The `favicon` permission only reads cached site icons from the browser for the dock; it does not read browsing history or upload data
 - Network requests are limited to Bing/Baidu/Google suggestions and Bing wallpaper APIs
 
 ## Category

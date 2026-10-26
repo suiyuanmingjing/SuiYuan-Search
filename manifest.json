@@ -5,7 +5,8 @@
   "description": "__MSG_extensionDescription__",
   "permissions": [
     "storage",
-    "bookmarks"
+    "bookmarks",
+    "favicon"
   ],
   "host_permissions": [
     "https://api.bing.com/*",

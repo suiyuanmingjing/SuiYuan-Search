@@ -628,6 +628,45 @@
     return null;
   }
 
+  var defaultFaviconHash;
+  function extensionFaviconUrl(pageUrl, size) {
+    if (!IS_EXTENSION || !chrome.runtime || !chrome.runtime.id) return '';
+    return 'chrome-extension://' + chrome.runtime.id + '/_favicon/?pageUrl=' +
+      encodeURIComponent(pageUrl) + '&size=' + (size || 128);
+  }
+
+  function imageHash(img) {
+    try {
+      var c = document.createElement('canvas');
+      c.width = 16; c.height = 16;
+      var ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, 16, 16);
+      var d = ctx.getImageData(0, 0, 16, 16).data;
+      var h = 0;
+      for (var i = 0; i < d.length; i += 4) {
+        h = (h * 31 + d[i] + d[i + 1] * 3 + d[i + 2] * 7 + d[i + 3] * 11) >>> 0;
+      }
+      return String(h);
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function getDefaultFaviconHash() {
+    if (defaultFaviconHash !== undefined) return Promise.resolve(defaultFaviconHash);
+    var url = extensionFaviconUrl('https://invalid.invalid/', 128);
+    if (!url) { defaultFaviconHash = ''; return Promise.resolve(''); }
+    return new Promise(function (resolve) {
+      var img = new Image();
+      var settled = false;
+      function done(v) { if (settled) return; settled = true; resolve(v); }
+      img.onload = function () { done(imageHash(img)); };
+      img.onerror = function () { done(''); };
+      img.src = url;
+      setTimeout(function () { done(''); }, 3000);
+    }).then(function (h) { defaultFaviconHash = h; return h; });
+  }
+
   function dockIconCandidates(b) {
     var list = [];
     function push(u) { if (u && list.indexOf(u) < 0) list.push(u); }
@@ -637,6 +676,7 @@
       var host = u.hostname;
       var full = encodeURIComponent(b.url);
       push(u.origin + '/favicon.ico');
+      push(extensionFaviconUrl(b.url, 128));
       push('https://api.xinac.net/icon/?url=' + full);
       push('https://cc.me/icon?url=' + full);
       push('https://icons.duckduckgo.com/ip3/' + host + '.ico');
@@ -655,8 +695,8 @@
       stop();
       if (img.parentNode) img.parentNode.removeChild(img);
     }
-    function ok() {
-      if (done || !img.naturalWidth) return;
+    function accept() {
+      if (done) return;
       stop();
       img.style.display = '';
       var letter = item.querySelector('.letter');
@@ -665,6 +705,16 @@
         bookmark.icon = img.src;
         queueDockSave();
       }
+    }
+    function ok() {
+      if (done || !img.naturalWidth) return;
+      if (img.src.indexOf('/_favicon/') < 0) { accept(); return; }
+      // Edge/Chrome 对没有缓存的站点会返回默认地球图标，识别出来后继续兜底
+      getDefaultFaviconHash().then(function (defHash) {
+        if (done) return;
+        if (defHash && imageHash(img) === defHash) { next(); return; }
+        accept();
+      });
     }
     function next() {
       if (done) return;
