@@ -613,17 +613,101 @@
   }
 
   /* ---------------- Dock ---------------- */
+  var dockSaveTimer = null;
+  function queueDockSave() {
+    clearTimeout(dockSaveTimer);
+    dockSaveTimer = setTimeout(function () {
+      try { saveBookmarks(); } catch (e) {}
+    }, 500);
+  }
+
+  function findBookmarkByUrl(url) {
+    for (var i = 0; i < bookmarks.length; i++) if (bookmarks[i].url === url) return bookmarks[i];
+    var k = bookmarkKey(url);
+    for (var j = 0; j < bookmarks.length; j++) if (bookmarkKey(bookmarks[j].url) === k) return bookmarks[j];
+    return null;
+  }
+
+  function dockIconCandidates(b) {
+    var list = [];
+    function push(u) { if (u && list.indexOf(u) < 0) list.push(u); }
+    if (b && b.icon) push(b.icon);
+    try {
+      var u = new URL(b.url);
+      var host = u.hostname;
+      var full = encodeURIComponent(b.url);
+      push(u.origin + '/favicon.ico');
+      push('https://api.xinac.net/icon/?url=' + full);
+      push('https://cc.me/icon?url=' + full);
+      push('https://icons.duckduckgo.com/ip3/' + host + '.ico');
+      push('https://www.google.com/s2/favicons?domain=' + host + '&sz=128');
+      push('https://logo.clearbit.com/' + host);
+      push('https://besticon-demo.herokuapp.com/icon?url=' + host + '&size=128');
+      push('https://favicon.run/favicon?domain=' + host + '&sz=128');
+    } catch (e) {}
+    return list;
+  }
+
+  function loadDockIcon(item, img, list, bookmark) {
+    var idx = 0, timer = null, done = false;
+    function stop() { done = true; clearTimeout(timer); }
+    function fail() {
+      stop();
+      if (img.parentNode) img.parentNode.removeChild(img);
+    }
+    function ok() {
+      if (done || !img.naturalWidth) return;
+      stop();
+      img.style.display = '';
+      var letter = item.querySelector('.letter');
+      if (letter) letter.style.display = 'none';
+      if (bookmark && bookmark.icon !== img.src) {
+        bookmark.icon = img.src;
+        queueDockSave();
+      }
+    }
+    function next() {
+      if (done) return;
+      clearTimeout(timer);
+      idx += 1;
+      if (idx >= list.length) { fail(); return; }
+      load();
+    }
+    function load() {
+      img.onload = ok;
+      img.onerror = next;
+      clearTimeout(timer);
+      img.src = list[idx];
+      timer = setTimeout(function () {
+        if (!img.complete || !img.naturalWidth) next();
+      }, 3000);
+    }
+    if (!list.length) { fail(); return; }
+    load();
+  }
+
+  function hydrateDockIcons() {
+    if (!el.dockScroll) return;
+    Array.prototype.forEach.call(el.dockScroll.querySelectorAll('.dock-item'), function (item) {
+      if (item.style.display === 'none') return;
+      var img = item.querySelector('img.dock-icon');
+      if (!img || img.getAttribute('data-started') === '1') return;
+      img.setAttribute('data-started', '1');
+      var url = item.getAttribute('data-url');
+      var b = findBookmarkByUrl(url) || { url: url, title: item.title };
+      loadDockIcon(item, img, dockIconCandidates(b), b);
+    });
+  }
+
   function renderDock() {
     var html = bookmarks.slice(0, 10).map(function (b) {
-      var icon = b.icon || SY.faviconFor(b.url);
-      var inner = icon
-        ? '<img src="' + esc(icon) + '" data-host="' + esc(SY.hostOf(b.url)) + '" alt="">'
-        : '<span class="letter">' + esc(firstChar(b.title)) + '</span>';
-      return '<button type="button" class="dock-item" data-url="' + esc(b.url) + '" title="' + esc(b.title) + '">' + inner + '</button>';
+      return '<button type="button" class="dock-item" data-url="' + esc(b.url) + '" title="' + esc(b.title) + '">' +
+        '<span class="letter">' + esc(firstChar(b.title)) + '</span>' +
+        '<img class="dock-icon" alt="" style="display:none">' +
+        '</button>';
     }).join('');
 
     el.dockScroll.innerHTML = html;
-    attachIconFallbacks(el.dockScroll);
     requestAnimationFrame(updateDockOverflow);
   }
 
@@ -651,6 +735,7 @@
     if (!needsExpand) {
       el.dockExpand.hidden = true;
       el.dock.classList.remove('has-overflow');
+      hydrateDockIcons();
       return;
     }
 
@@ -658,6 +743,7 @@
     el.dock.classList.add('has-overflow');
     fit = fitCount(el.dockScroll.clientWidth);
     items.forEach(function (it, i) { if (i >= fit) it.style.display = 'none'; });
+    hydrateDockIcons();
   }
 
   function firstChar(s) {
@@ -1072,7 +1158,7 @@
     var item = {
       title: title,
       url: url,
-      icon: $('bmIcon').value.trim() || SY.faviconFor(url)
+      icon: $('bmIcon').value.trim()
     };
     if (editBookmarkIndex >= 0) bookmarks[editBookmarkIndex] = item;
     else bookmarks.push(item);
@@ -1760,7 +1846,7 @@
           var data = JSON.parse(String(reader.result));
           if (!Array.isArray(data)) throw new Error('格式不正确');
           var cleaned = data.filter(function (b) { return b && b.url; }).map(function (b) {
-            return { title: b.title || b.url, url: b.url, icon: b.icon || SY.faviconFor(b.url) };
+            return { title: b.title || b.url, url: b.url, icon: b.icon || '' };
           });
           if (!cleaned.length) throw new Error('没有有效条目');
           bookmarks = dedupeBookmarks(cleaned);
