@@ -464,7 +464,6 @@
   }
 
   function onQueryInput(immediate) {
-    if (composing) return;
     var q = el.query.value.trim();
     if (q === sugCurKey) return;
     sugCurKey = q;
@@ -1248,8 +1247,9 @@
     });
 
     el.query.addEventListener('input', function (e) {
-      if (composing || (e && e.isComposing)) return;
-      onQueryInput();
+      // 拼音组合过程中也要立刻联想，不做防抖
+      if (composing || (e && e.isComposing)) onQueryInput(true);
+      else onQueryInput();
     });
 
     el.query.addEventListener('keydown', function (e) {
