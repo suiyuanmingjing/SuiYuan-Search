@@ -7,7 +7,7 @@
 
   var settings, bookmarks;
   var videoUrls = {};
-  var sugList = [], sugIndex = -1, sugTimer = null, sugAbort = null, sugSeq = 0, sugCache = {};
+  var sugList = [], sugIndex = -1, sugTimer = null, sugAbort = null, sugSeq = 0, sugCache = {}, composing = false, sugCurKey = '';
   var editEngineIndex = -1, editBookmarkIndex = -1;
   var mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   var IS_EXTENSION = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id;
@@ -444,13 +444,36 @@
     for (var i = 0; i < nodes.length; i++) nodes[i].classList.toggle('active', i === sugIndex);
   }
 
-  function onQueryInput() {
+  function preferredSuggestSource() {
+    var id = settings.engine;
+    return (id === 'bing' || id === 'google' || id === 'baidu') ? id : '';
+  }
+
+  function cachedSuggestions(key, preferred) {
+    var bucket = sugCache[key];
+    if (!bucket || typeof bucket !== 'object' || Array.isArray(bucket)) return null;
+    var out = [], seen = {};
+    function push(list) {
+      (list || []).forEach(function (s) {
+        if (!seen[s]) { seen[s] = 1; out.push(s); }
+      });
+    }
+    if (preferred && bucket[preferred]) push(bucket[preferred]);
+    Object.keys(bucket).forEach(function (k) { if (k !== preferred) push(bucket[k]); });
+    return out.length ? out.slice(0, 8) : null;
+  }
+
+  function onQueryInput(immediate) {
+    if (composing) return;
     var q = el.query.value.trim();
+    if (q === sugCurKey) return;
+    sugCurKey = q;
     clearTimeout(sugTimer);
     if (sugAbort) { try { sugAbort.abort(); } catch (e) {} sugAbort = null; }
     if (!q) { hideSuggestions(); showHistory(); return; }
-    if (sugCache[q]) showSuggestions(sugCache[q].slice(0, 8));
-    sugTimer = setTimeout(function () { fetchSuggestions(q); }, 20);
+    var cached = cachedSuggestions(q, preferredSuggestSource());
+    if (cached) showSuggestions(cached);
+    sugTimer = setTimeout(function () { fetchSuggestions(q); }, immediate ? 0 : 20);
   }
 
   function dedupe(list) {
@@ -466,42 +489,79 @@
 
   function fetchSuggestions(q) {
     var key = String(q || '').trim();
-    if (!key) { hideSuggestions(); return; }
+    if (!key) return;
 
     var seq = ++sugSeq;
-    var shown = false;
-    var merged = [];
+    var preferred = preferredSuggestSource();
+    var got = {}, order = [], windowOver = false;
 
-    function accept(list) {
-      if (seq !== sugSeq || !Array.isArray(list) || !list.length) return;
-      merged = dedupe(merged.concat(list));
-      if (!merged.length) return;
-      shown = true;
-      if (merged.length >= 4) {
-        sugCache[key] = merged.slice(0, 12);
-        if (Object.keys(sugCache).length > 60) sugCache = {};
+    function merged() {
+      var out = [], seen = {};
+      function push(list) {
+        (list || []).forEach(function (s) {
+          if (!seen[s]) { seen[s] = 1; out.push(s); }
+        });
       }
-      showSuggestions(merged.slice(0, 8));
+      if (preferred && got[preferred]) push(got[preferred]);
+      order.forEach(function (src) { if (src !== preferred) push(got[src]); });
+      return out;
     }
 
-    if (sugCache[key]) accept(sugCache[key]);
-    if (!IS_EXTENSION) jsonpSuggestions(key, accept);
+    function paint() {
+      if (seq !== sugSeq) return;
+      var list = merged().slice(0, 8);
+      if (list.length) showSuggestions(list);
+    }
+
+    function remember(source, list) {
+      var bucket = sugCache[key];
+      if (!bucket || typeof bucket !== 'object' || Array.isArray(bucket)) bucket = sugCache[key] = {};
+      bucket[source] = list.slice(0, 12);
+      if (Object.keys(sugCache).length > 60) sugCache = {};
+    }
+
+    function accept(source) {
+      return function (list) {
+        if (seq !== sugSeq || !Array.isArray(list) || !list.length) return;
+        var clean = dedupe(list);
+        if (!clean.length) return;
+        if (!got[source]) { got[source] = clean; order.push(source); }
+        else { got[source] = dedupe(got[source].concat(clean)); }
+        remember(source, got[source]);
+        // 当前引擎的联想优先；否则谁先到先显示
+        if (source === preferred || windowOver) paint();
+      };
+    }
+
+    setTimeout(function () {
+      if (seq !== sugSeq) return;
+      windowOver = true;
+      paint();
+    }, 20);
 
     if (sugAbort) { try { sugAbort.abort(); } catch (e) {} }
     sugAbort = new AbortController();
     var signal = sugAbort.signal;
     setTimeout(function () { try { sugAbort.abort(); } catch (e) {} }, 1400);
 
+    var acceptBing = accept('bing');
+    var acceptGoogle = accept('google');
+    var acceptBaidu = accept('baidu');
+
     var tasks = [
       fetchJson('https://api.bing.com/osjson.aspx?query=' + encodeURIComponent(key) + '&mkt=zh-CN', signal)
-        .then(function (data) { if (Array.isArray(data) && Array.isArray(data[1])) accept(data[1]); }),
+        .then(function (data) { if (Array.isArray(data) && Array.isArray(data[1])) acceptBing(data[1]); }),
       fetchJson('https://suggestqueries.google.com/complete/search?client=firefox&q=' + encodeURIComponent(key), signal)
-        .then(function (data) { if (Array.isArray(data) && Array.isArray(data[1])) accept(data[1]); }),
-      fetchBaiduSuggest(key, signal).then(accept)
+        .then(function (data) { if (Array.isArray(data) && Array.isArray(data[1])) acceptGoogle(data[1]); }),
+      fetchBaiduSuggest(key, signal).then(acceptBaidu)
     ];
 
+    if (!IS_EXTENSION) jsonpSuggestions(key, acceptBaidu);
+
     Promise.allSettled(tasks).then(function () {
-      if (seq === sugSeq && !shown) hideSuggestions();
+      if (seq !== sugSeq) return;
+      if (!merged().length) { hideSuggestions(); return; }
+      paint();
     });
   }
 
@@ -1173,7 +1233,24 @@
       if (!el.query.value.trim()) showHistory();
     });
 
-    el.query.addEventListener('input', onQueryInput);
+    el.query.addEventListener('compositionstart', function () {
+      composing = true;
+      clearTimeout(sugTimer);
+      if (sugAbort) { try { sugAbort.abort(); } catch (e) {} sugAbort = null; }
+      hideSuggestions();
+    });
+
+    el.query.addEventListener('compositionend', function () {
+      composing = false;
+      // 即使提交后的文字没变，也重新取一次（compositionstart 时已隐藏）
+      sugCurKey = '';
+      onQueryInput(true);
+    });
+
+    el.query.addEventListener('input', function (e) {
+      if (composing || (e && e.isComposing)) return;
+      onQueryInput();
+    });
 
     el.query.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowDown') {
