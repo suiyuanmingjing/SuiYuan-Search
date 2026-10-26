@@ -419,15 +419,10 @@
   }
 
   /* ---------------- 搜索联想 ---------------- */
-  function localSuggestions(q) {
-    var suffixes = ['教程', '是什么', '怎么用', '官网', '下载', '在线'];
-    var out = [q];
-    for (var i = 0; i < suffixes.length && out.length < 6; i++) out.push(q + ' ' + suffixes[i]);
-    return out;
-  }
-
   function showSuggestions(list) {
-    sugList = list || [];
+    var next = (list || []).slice(0, 8);
+    if (!el.suggestions.hidden && next.length && next.join('\u0001') === sugList.join('\u0001')) return;
+    sugList = next;
     sugIndex = -1;
     if (!sugList.length) { hideSuggestions(); return; }
     el.suggestions.innerHTML = sugList.map(function (s, i) {
@@ -454,9 +449,9 @@
     clearTimeout(sugTimer);
     if (sugAbort) { try { sugAbort.abort(); } catch (e) {} sugAbort = null; }
     if (!q) { hideSuggestions(); showHistory(); return; }
-    hideSuggestions();
+    if (q.length > 5) { hideSuggestions(); return; }
     if (sugCache[q]) showSuggestions(sugCache[q].slice(0, 8));
-    sugTimer = setTimeout(function () { fetchSuggestions(q); }, 120);
+    sugTimer = setTimeout(function () { fetchSuggestions(q); }, 60);
   }
 
   function dedupe(list) {
@@ -472,7 +467,7 @@
 
   function fetchSuggestions(q) {
     var key = String(q || '').trim();
-    if (!key) { hideSuggestions(); return; }
+    if (!key || key.length > 5) { hideSuggestions(); return; }
 
     var seq = ++sugSeq;
     var shown = false;
@@ -490,33 +485,25 @@
       showSuggestions(merged.slice(0, 8));
     }
 
-    // 命中缓存立即出词，再让网络结果继续补全
     if (sugCache[key]) accept(sugCache[key]);
-
-    // 网页版：百度 JSONP
     if (!IS_EXTENSION) jsonpSuggestions(key, accept);
 
     if (sugAbort) { try { sugAbort.abort(); } catch (e) {} }
     sugAbort = new AbortController();
     var signal = sugAbort.signal;
-    setTimeout(function () { try { sugAbort.abort(); } catch (e) {} }, 1800);
+    setTimeout(function () { try { sugAbort.abort(); } catch (e) {} }, 1400);
 
-    // 谁先回谁先显示，不再等最慢的一路
-    fetchJson('https://api.bing.com/osjson.aspx?query=' + encodeURIComponent(key) + '&mkt=zh-CN', signal)
-      .then(function (data) { if (Array.isArray(data) && Array.isArray(data[1])) accept(data[1]); })
-      .catch(function () {});
-    fetchJson('https://suggestqueries.google.com/complete/search?client=firefox&q=' + encodeURIComponent(key), signal)
-      .then(function (data) { if (Array.isArray(data) && Array.isArray(data[1])) accept(data[1]); })
-      .catch(function () {});
-    fetchBaiduSuggest(key, signal).then(accept).catch(function () {});
+    var tasks = [
+      fetchJson('https://api.bing.com/osjson.aspx?query=' + encodeURIComponent(key) + '&mkt=zh-CN', signal)
+        .then(function (data) { if (Array.isArray(data) && Array.isArray(data[1])) accept(data[1]); }),
+      fetchJson('https://suggestqueries.google.com/complete/search?client=firefox&q=' + encodeURIComponent(key), signal)
+        .then(function (data) { if (Array.isArray(data) && Array.isArray(data[1])) accept(data[1]); }),
+      fetchBaiduSuggest(key, signal).then(accept)
+    ];
 
-    // 全部失败才用本地兜底
-    setTimeout(function () {
-      if (seq === sugSeq && !shown) {
-        shown = true;
-        showSuggestions(localSuggestions(key));
-      }
-    }, 2200);
+    Promise.allSettled(tasks).then(function () {
+      if (seq === sugSeq && !shown) hideSuggestions();
+    });
   }
 
   function fetchBaiduSuggest(q, signal) {
