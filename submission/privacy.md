@@ -8,6 +8,7 @@
   - 必应壁纸接口（cn.bing.com / www.bing.com）
   - 搜索建议（api.bing.com、suggestion.baidu.com、suggestqueries.google.com）
   - 网页版必应壁纸的备用图片源（api.bimg.cc）
+- 图标：优先使用浏览器内置 `_favicon` 接口读取本地缓存的网站图标；本地没有时请求网站自身的 `/favicon.ico`。仍失败时，可能把该收藏网站的域名或 URL 发送给公开图标服务（api.xinac.net、cc.me、icons.duckduckgo.com、www.google.com、logo.clearbit.com、besticon-demo.herokuapp.com、favicon.run）以获取图标图片。这些请求只包含图标查询，不包含账号、搜索词或浏览历史。
 - 不包含统计、追踪、广告或远程代码。
 - 浏览器收藏夹权限仅用于「导入浏览器收藏夹」，只读取，不修改、不删除浏览器收藏夹。
 
@@ -21,5 +22,6 @@ SuiYuan Search does not collect, store or upload any personal data.
 - Settings, bookmarks and search history stay local (chrome.storage.sync in the extension, localStorage on the web).
 - Uploaded images and videos are stored in local IndexedDB and never leave the device.
 - Network requests are limited to Bing wallpaper endpoints, search suggestion endpoints and an optional Bing image fallback.
+- Icons: the extension first uses the browser's built-in `_favicon` endpoint to read locally cached site icons, then the site's own `/favicon.ico`. If both fail, the bookmarked domain or URL may be sent to public icon services (api.xinac.net, cc.me, icons.duckduckgo.com, www.google.com, logo.clearbit.com, besticon-demo.herokuapp.com, favicon.run) to fetch an icon image. These requests contain only the icon lookup, never accounts, search terms or browsing history.
 - No analytics, tracking, ads or remote code.
 - The bookmarks permission is used only to import browser bookmarks; it never modifies or deletes them.
