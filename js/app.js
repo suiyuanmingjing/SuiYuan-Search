@@ -449,9 +449,8 @@
     clearTimeout(sugTimer);
     if (sugAbort) { try { sugAbort.abort(); } catch (e) {} sugAbort = null; }
     if (!q) { hideSuggestions(); showHistory(); return; }
-    if (q.length > 5) { hideSuggestions(); return; }
     if (sugCache[q]) showSuggestions(sugCache[q].slice(0, 8));
-    sugTimer = setTimeout(function () { fetchSuggestions(q); }, 60);
+    sugTimer = setTimeout(function () { fetchSuggestions(q); }, 20);
   }
 
   function dedupe(list) {
@@ -467,7 +466,7 @@
 
   function fetchSuggestions(q) {
     var key = String(q || '').trim();
-    if (!key || key.length > 5) { hideSuggestions(); return; }
+    if (!key) { hideSuggestions(); return; }
 
     var seq = ++sugSeq;
     var shown = false;
