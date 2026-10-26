@@ -54,6 +54,7 @@
     history: true,
     language: 'auto',
     openFocus: true,
+    searchOpenNew: false,
     clock: { showDate: true, hour24: true, showSeconds: false, blinkColon: false, weight: 200 },
     scrim: 18
   };
@@ -106,6 +107,7 @@
     if (typeof raw.history === 'boolean') s.history = raw.history;
     if (typeof raw.language === 'string') s.language = raw.language;
     if (typeof raw.openFocus === 'boolean') s.openFocus = raw.openFocus;
+    if (typeof raw.searchOpenNew === 'boolean') s.searchOpenNew = raw.searchOpenNew;
     if (raw.dockPosition === 'top' || raw.dockPosition === 'bottom') s.dockPosition = raw.dockPosition;
 
     var bg = raw.background;

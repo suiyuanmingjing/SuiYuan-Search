@@ -624,3 +624,16 @@ SY.I18N.fr['清空收藏夹'] = 'Vider les favoris';
 SY.I18N.ru['清空收藏夹'] = 'Очистить закладки';
 SY.I18N.es['清空收藏夹'] = 'Vaciar marcadores';
 SY.I18N.ar['清空收藏夹'] = 'مسح الإشارات';
+
+SY.I18N['zh-Hant']['搜索后打开新标签页'] = '搜尋後開啟新分頁';
+SY.I18N['zh-Hant']['关闭时直接替换当前起始页'] = '關閉時直接取代目前起始頁';
+SY.I18N.en['搜索后打开新标签页'] = 'Open searches in a new tab';
+SY.I18N.en['关闭时直接替换当前起始页'] = 'When off, searches replace the current start page';
+SY.I18N.fr['搜索后打开新标签页'] = 'Ouvrir les recherches dans un nouvel onglet';
+SY.I18N.fr['关闭时直接替换当前起始页'] = "Désactivé : la recherche remplace la page de départ";
+SY.I18N.ru['搜索后打开新标签页'] = 'Открывать поиск в новой вкладке';
+SY.I18N.ru['关闭时直接替换当前起始页'] = 'Выключено: поиск заменяет стартовую страницу';
+SY.I18N.es['搜索后打开新标签页'] = 'Abrir búsquedas en una pestaña nueva';
+SY.I18N.es['关闭时直接替换当前起始页'] = 'Desactivado: la búsqueda sustituye la página de inicio';
+SY.I18N.ar['搜索后打开新标签页'] = 'فتح البحث في علامة تبويب جديدة';
+SY.I18N.ar['关闭时直接替换当前起始页'] = 'عند الإيقاف: يستبدل البحث صفحة البداية';

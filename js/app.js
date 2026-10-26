@@ -409,13 +409,21 @@
     return e.homepage || String(e.url || '').split('?')[0] || 'https://www.bing.com';
   }
 
+  function openSearchResult(url) {
+    if (settings.searchOpenNew) {
+      window.open(url, '_blank', 'noopener');
+      return;
+    }
+    location.href = url;
+  }
+
   function doSearch(text) {
     var q = String(text || '').trim();
-    if (!q) { location.href = engineHome(currentEngine()); return; }
-    if (looksLikeUrl(q)) { location.href = toUrl(q); return; }
+    if (!q) { openSearchResult(engineHome(currentEngine())); return; }
+    if (looksLikeUrl(q)) { openSearchResult(toUrl(q)); return; }
     var e = currentEngine();
     var url = e.url && e.url.indexOf('%s') >= 0 ? e.url.replace('%s', encodeURIComponent(q)) : e.url;
-    location.href = url;
+    openSearchResult(url);
   }
 
   /* ---------------- 搜索联想 ---------------- */
@@ -904,6 +912,7 @@
     $('historyToggle').setAttribute('aria-pressed', settings.history ? 'true' : 'false');
     if ($('languageSelect')) $('languageSelect').value = settings.language || 'auto';
     $('openFocusToggle').setAttribute('aria-pressed', settings.openFocus !== false ? 'true' : 'false');
+    $('searchOpenToggle').setAttribute('aria-pressed', settings.searchOpenNew ? 'true' : 'false');
 
     renderBookmarkList();
   }
@@ -1571,6 +1580,12 @@
       if (!btn) return;
       settings.clock.weight = parseInt(btn.getAttribute('data-weight'), 10) || 200;
       applyClockWeight();
+      saveNow();
+    });
+
+    $('searchOpenToggle').addEventListener('click', function () {
+      settings.searchOpenNew = !settings.searchOpenNew;
+      this.setAttribute('aria-pressed', settings.searchOpenNew ? 'true' : 'false');
       saveNow();
     });
 
